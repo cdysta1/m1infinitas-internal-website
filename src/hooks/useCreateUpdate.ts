@@ -7,7 +7,7 @@ import { timelineKey, type TimelinePage } from './useUpdatesTimeline';
 import { projectsFeedKey } from './useProjectsFeed';
 import { OPTIMISTIC } from '@/lib/constants';
 import { tempId } from '@/lib/utils';
-import type { TimelineEntry, UpdateItem } from '@/types/models';
+import type { Profile, TimelineEntry, UpdateItem } from '@/types/models';
 
 export interface CreateUpdateArgs {
   projectId: string;
@@ -59,16 +59,19 @@ export function useCreateUpdate() {
         retryPayload: { content, files },
       };
 
+      // Seed the author profile into the timeline's authors map so the name
+      // renders immediately. Without this, the entry falls back to "匿名" until
+      // a refetch repopulates authors via getProfilesByIds.
+      const authorPatch = new Map<string, Profile>();
+      if (user && profile) authorPatch.set(user.$id, profile);
+
       qc.setQueryData<InfiniteData<TimelinePage>>(timelineKey(projectId), (old) => {
         if (!old || old.pages.length === 0) {
           return {
             pages: [
               {
                 entries: [optimistic],
-                authors:
-                  user && profile
-                    ? new Map([[user.$id, profile]])
-                    : new Map<string, never>(),
+                authors: authorPatch,
                 cursor: undefined,
                 total: 1,
               },
@@ -80,7 +83,11 @@ export function useCreateUpdate() {
         return {
           ...old,
           pages: [
-            { ...first, entries: [optimistic, ...first.entries] },
+            {
+              ...first,
+              entries: [optimistic, ...first.entries],
+              authors: mergeAuthorMaps(first.authors, authorPatch),
+            },
             ...old.pages.slice(1),
           ],
         };
@@ -117,14 +124,44 @@ function replaceEntryInCache(
 ) {
   qc.setQueryData<InfiniteData<TimelinePage>>(timelineKey(projectId), (old) => {
     if (!old) return old;
+    // The realtime subscription may have already inserted the server document
+    // (same $id) into the cache while our optimistic temp entry was still there
+    // — Appwrite broadcasts create events back to the author's own client too.
+    // Detect that so we drop the temp entry instead of producing a duplicate.
+    const serverAlreadyPresent = old.pages.some((page) =>
+      page.entries.some((e) => e.id === serverEntry.id),
+    );
     return {
       ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        entries: page.entries.map((e) => (e.id === tempId ? serverEntry : e)),
-      })),
+      pages: old.pages.map((page) => {
+        const entries: TimelineEntry[] = [];
+        const seen = new Set<string>();
+        for (const e of page.entries) {
+          if (e.id === tempId) {
+            // Substitute the server entry once, unless realtime already added it.
+            if (serverAlreadyPresent || seen.has(serverEntry.id)) continue;
+            seen.add(serverEntry.id);
+            entries.push(serverEntry);
+            continue;
+          }
+          if (seen.has(e.id)) continue;
+          seen.add(e.id);
+          entries.push(e);
+        }
+        return { ...page, entries };
+      }),
     };
   });
+}
+
+function mergeAuthorMaps(
+  base: Map<string, Profile>,
+  patch: Map<string, Profile>,
+): Map<string, Profile> {
+  if (patch.size === 0) return base;
+  const next = new Map(base);
+  for (const [k, v] of patch) next.set(k, v);
+  return next;
 }
 
 function markEntryFailed(

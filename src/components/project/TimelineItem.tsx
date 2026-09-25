@@ -7,6 +7,7 @@ import { formatDateTime, formatRelativeTime, cn } from '@/lib/utils';
 import { OPTIMISTIC } from '@/lib/constants';
 import type { Profile, TimelineEntry } from '@/types/models';
 import { Lightbox } from '@/components/common/Lightbox';
+import { SmartImage } from '@/components/common/SmartImage';
 
 interface TimelineItemProps {
   entry: TimelineEntry;
@@ -74,11 +75,11 @@ export function TimelineItem({ entry, author, onRetry }: TimelineItemProps) {
                 disabled={isPending}
                 aria-label={`查看图片 ${idx + 1}`}
               >
-                <img
+                <SmartImage
                   src={src}
                   alt=""
-                  loading="lazy"
-                  className="aspect-square w-full object-cover"
+                  wrapperClassName="aspect-square w-full"
+                  imgClassName="object-cover"
                 />
                 {isPending && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30">

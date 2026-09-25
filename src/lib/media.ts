@@ -2,19 +2,27 @@ import imageCompression from 'browser-image-compression';
 import { BUCKET_ID, client } from './appwrite';
 import { COMPRESSION, IMG_PRESETS, type ImgPreset } from './constants';
 
-// Build an Appwrite preview URL for a stored file with on-the-fly transform.
-// Uses `view` endpoint so the response is inline-renderable by <img>.
+// Image transformations are blocked on the current Appwrite plan (the
+// `preview` endpoint returns 403 storage_image_transformations_blocked), and
+// the `view` endpoint ignores width/quality/output anyway. Keep the preset
+// plumbing behind a flag so it can be re-enabled after a plan upgrade.
+const IMG_TRANSFORM_ENABLED = false;
+
+// Build an Appwrite URL for a stored file, renderable inline by <img>.
+// Uses the `view` endpoint. Media files are publicly readable (see storage.ts)
+// so a raw cross-origin <img> — which cannot attach the session JWT header —
+// still resolves without auth.
 export function buildPreviewUrl(
   fileId: string,
   preset: ImgPreset = 'cover',
 ): string {
-  const { width, quality, output } = IMG_PRESETS[preset];
-  const params = new URLSearchParams({
-    project: client.config.project,
-    width: String(width),
-    quality: String(quality),
-    output,
-  });
+  const params = new URLSearchParams({ project: client.config.project });
+  if (IMG_TRANSFORM_ENABLED) {
+    const { width, quality, output } = IMG_PRESETS[preset];
+    params.set('width', String(width));
+    params.set('quality', String(quality));
+    params.set('output', output);
+  }
   return `${client.config.endpoint}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?${params.toString()}`;
 }
 

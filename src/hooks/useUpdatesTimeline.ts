@@ -77,19 +77,37 @@ export function useUpdatesTimeline(projectId: string | undefined) {
     const unsub = subscribeUpdates((payload) => {
       if (payload.project_id !== projectId) return;
       const key = timelineKey(projectId);
-      qc.setQueryData<InfiniteData<TimelinePage>>(key, (old) => {
-        if (!old || old.pages.length === 0) return old;
-        const first = old.pages[0];
-        if (first.entries.some((e) => e.id === payload.$id)) return old;
-        const entry = realtimePayloadToEntry(payload);
-        return {
-          ...old,
-          pages: [
-            { ...first, entries: [entry, ...first.entries] },
-            ...old.pages.slice(1),
-          ],
-        };
-      });
+      void (async () => {
+        // Resolve the author profile if it is not cached yet, so a live update
+        // shows the real name instead of falling back to "匿名".
+        let authorPatch: Map<string, Profile> | undefined;
+        const current = qc.getQueryData<InfiniteData<TimelinePage>>(key);
+        const known = mergeAuthors(current?.pages);
+        if (payload.author_id && !known.has(payload.author_id)) {
+          try {
+            authorPatch = await getProfilesByIds([payload.author_id]);
+          } catch (err) {
+            console.warn('[timeline] failed to resolve realtime author', err);
+          }
+        }
+        qc.setQueryData<InfiniteData<TimelinePage>>(key, (old) => {
+          if (!old || old.pages.length === 0) return old;
+          const first = old.pages[0];
+          if (first.entries.some((e) => e.id === payload.$id)) return old;
+          const entry = realtimePayloadToEntry(payload);
+          const authors =
+            authorPatch && authorPatch.size > 0
+              ? new Map([...first.authors, ...authorPatch])
+              : first.authors;
+          return {
+            ...old,
+            pages: [
+              { ...first, entries: [entry, ...first.entries], authors },
+              ...old.pages.slice(1),
+            ],
+          };
+        });
+      })();
     });
     return unsub;
   }, [projectId, qc]);

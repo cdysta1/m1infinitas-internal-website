@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { buildPreviewUrl } from '@/lib/media';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SmartImage } from '@/components/common/SmartImage';
 import type { Profile, Project } from '@/types/models';
 
 interface ProjectCardProps {
@@ -35,12 +36,11 @@ export function ProjectCard({ project, owner, pending, failed }: ProjectCardProp
     >
       <div className="relative w-full overflow-hidden rounded-xl bg-muted">
         {coverUrl ? (
-          <img
+          <SmartImage
             src={coverUrl}
             alt={project.title}
-            loading="lazy"
-            className="w-full object-cover transition-opacity duration-500 group-hover:opacity-95"
-            style={{ display: 'block' }}
+            wrapperClassName="w-full"
+            imgClassName="object-cover transition-opacity duration-500 group-hover:opacity-95"
           />
         ) : (
           <div className="flex aspect-square w-full items-center justify-center text-muted-foreground">

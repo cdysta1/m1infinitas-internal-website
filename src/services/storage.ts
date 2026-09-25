@@ -23,7 +23,10 @@ function buildFileName(userId: string, original: File): string {
 }
 
 // Compress + upload a single file, returning the created Appwrite file id.
-// File is readable by all signed-in users; owner can delete/update.
+// Media is publicly readable (Role.any) on purpose: it is rendered via raw
+// cross-origin <img> tags, which cannot attach the Appwrite session JWT header.
+// If we required read("users"), those image requests would 401 whenever the
+// browser does not send the third-party session cookie. Owner keeps write/delete.
 export async function uploadMedia(
   file: File,
   userId: string,
@@ -38,7 +41,7 @@ export async function uploadMedia(
     ID.unique(),
     payload,
     [
-      Permission.read(Role.users()),
+      Permission.read(Role.any()),
       Permission.update(Role.user(userId)),
       Permission.delete(Role.user(userId)),
     ],

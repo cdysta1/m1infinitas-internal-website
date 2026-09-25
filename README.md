@@ -40,7 +40,8 @@ npm run dev
 | avatar_file_id | string | 64 | | | Storage 文件 ID |
 
 - **Document Security**: 启用
-- **Permissions** (collection 级): `users` → Read；文档级由代码写入 `user:$id` update/delete
+- **Permissions** (collection 级): `users` → Read + Create；文档级由代码写入 `user:$id` update/delete
+  - 注意：`create` 权限只能在 collection 级授予（文档创建时尚不存在），缺失会导致注册时建 profile 报 401。
 
 #### `projects`
 
@@ -54,7 +55,7 @@ npm run dev
 | updated_at | datetime | | ✓ | | 用于排序 |
 
 - **Index**: `updated_at` DESC
-- **Permissions**: `users` → Read
+- **Permissions**: `users` → Read + Create
 
 #### `updates`
 
@@ -67,14 +68,17 @@ npm run dev
 | created_at | datetime | | ✓ | | |
 
 - **Index**: `project_id` ASC + `created_at` DESC（复合索引，加速 timeline 查询）
-- **Permissions**: `users` → Read
+- **Permissions**: `users` → Read + Create
 
 ### 3. Storage Bucket
 
 - 创建一个 Bucket，记下 `Bucket ID`
-- **File Security**: 启用
-- **Permissions**: `users` → Read；文档级由代码写入 `user:$id` update/delete
-- 图片实时处理无需额外开启，Appwrite Cloud 默认支持 `?width=&quality=&output=webp`
+- **File Security**: 关闭（bucket 级权限统一管理，省去逐文件配置）
+- **Permissions**（bucket 级）：`any` → Read；`users` → Create
+  - 媒体必须是 **公开可读**：前端用裸 `<img>` 跨域加载图片，无法附带 Appwrite 会话 JWT 头。若限制为 `users` → Read，一旦浏览器不发送第三方 Cookie，图片请求就会 401 而静默失败。
+  - 仅暴露读取；写入（Create）仍需登录用户。删除/更新未在 MVP 开放。
+- **图片变换（transformations）**：当前 Appwrite 套餐 **不支持**（`preview` 端点返回 `403 storage_image_transformations_blocked`）。因此代码改用 `view` 端点返回原图，`?width=&quality=&output=webp` 变换参数已在 [media.ts](src/lib/media.ts) 中通过 `IMG_TRANSFORM_ENABLED` 开关关闭，升级套餐后可重新启用。
+  - 前端已用 `browser-image-compression` 在上传前把图片压到 ~1MB，弥补无服务端变换的体积问题。
 
 ### 4. Auth
 
