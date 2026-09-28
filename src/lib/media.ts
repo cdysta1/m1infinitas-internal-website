@@ -27,6 +27,42 @@ export function buildPreviewUrl(
   return `${client.config.endpoint}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?${params.toString()}`;
 }
 
+const DEFAULT_AVATAR_FILES = [
+  'default-orange.png',
+  'default-flower.png',
+  'default-blue-mask.png',
+  'default-purple-face.png',
+  'default-mint-face.png',
+  'default-cyan-curls.png',
+] as const;
+
+const DEMO_AVATAR_INDEX: Record<string, number> = {
+  'demo-user-lin': 0,
+  'demo-user-yu': 1,
+  'demo-user-su': 2,
+  'demo-user-he': 3,
+};
+
+function stableAvatarIndex(seed: string): number {
+  const assigned = DEMO_AVATAR_INDEX[seed];
+  if (assigned !== undefined) return assigned;
+
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return hash % DEFAULT_AVATAR_FILES.length;
+}
+
+export function getAvatarUrl(fileId: string | null | undefined, seed: string): string {
+  if (fileId) return buildPreviewUrl(fileId, 'avatar');
+  const fileName = DEFAULT_AVATAR_FILES[stableAvatarIndex(seed)];
+  return new URL(
+    `${import.meta.env.BASE_URL}demo/avatars/${fileName}`,
+    window.location.origin,
+  ).href;
+}
+
 // Compress a File to <= ~1MB and reasonable dimensions before upload.
 // Videos are passed through untouched (MVP does not transcode).
 export async function compressImage(file: File): Promise<File> {

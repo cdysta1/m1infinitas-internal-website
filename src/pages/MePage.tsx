@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { updateProfile } from '@/services/profiles';
 import { uploadMedia } from '@/services/storage';
-import { buildPreviewUrl } from '@/lib/media';
+import { getAvatarUrl } from '@/lib/media';
 
 export function MePage() {
   const { user, profile, refreshProfile, logout } = useAuth();
@@ -37,9 +37,7 @@ export function MePage() {
     );
   }
 
-  const avatarUrl = profile?.avatar_file_id
-    ? buildPreviewUrl(profile.avatar_file_id, 'avatar')
-    : undefined;
+  const avatarUrl = getAvatarUrl(profile?.avatar_file_id, user.$id);
   const initials = (name || user.name || user.email).slice(0, 1).toUpperCase();
 
   const onPickAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,7 +98,7 @@ export function MePage() {
             disabled={uploadingAvatar}
           >
             <Avatar className="h-20 w-20">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt={name} />}
+              <AvatarImage src={avatarUrl} alt={name} />
               <AvatarFallback className="text-lg">{initials}</AvatarFallback>
             </Avatar>
             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100">

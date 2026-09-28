@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { buildPreviewUrl } from '@/lib/media';
+import { buildPreviewUrl, getAvatarUrl } from '@/lib/media';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SmartImage } from '@/components/common/SmartImage';
@@ -18,10 +18,8 @@ export function ProjectCard({ project, owner, pending, failed }: ProjectCardProp
   const coverUrl = project.cover_file_id
     ? buildPreviewUrl(project.cover_file_id, 'cover')
     : undefined;
-  const avatarUrl = owner?.avatar_file_id
-    ? buildPreviewUrl(owner.avatar_file_id, 'avatar')
-    : undefined;
   const ownerName = owner?.name ?? '匿名';
+  const avatarUrl = getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
   const initials = ownerName.slice(0, 1).toUpperCase() || '?';
 
   return (
@@ -64,7 +62,7 @@ export function ProjectCard({ project, owner, pending, failed }: ProjectCardProp
         </h3>
         <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Avatar className="h-4 w-4">
-            {avatarUrl && <AvatarImage src={avatarUrl} alt={ownerName} />}
+            <AvatarImage src={avatarUrl} alt={ownerName} />
             <AvatarFallback className="text-[9px]">{initials}</AvatarFallback>
           </Avatar>
           <span className="max-w-[7rem] truncate">{ownerName}</span>

@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { buildPreviewUrl } from '@/lib/media';
+import { getAvatarUrl } from '@/lib/media';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface HeaderProps {
@@ -16,7 +16,7 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
 
   const displayName = profile?.name || user?.name || user?.email?.split('@')[0] || '';
   const initials = displayName.slice(0, 1).toUpperCase() || '?';
-  const avatarUrl = profile?.avatar_file_id ? buildPreviewUrl(profile.avatar_file_id, 'avatar') : undefined;
+  const avatarUrl = getAvatarUrl(profile?.avatar_file_id, profile?.$id ?? user?.$id ?? displayName);
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/80 backdrop-blur">
@@ -40,7 +40,7 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
           )}
           <Link to="/me" aria-label="我的" className="ml-1 flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+              <AvatarImage src={avatarUrl} alt={displayName} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <span className="hidden max-w-[8rem] truncate text-sm sm:inline">{displayName}</span>

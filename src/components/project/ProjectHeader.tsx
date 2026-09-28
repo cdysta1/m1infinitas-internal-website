@@ -2,7 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { buildPreviewUrl } from '@/lib/media';
+import { getAvatarUrl } from '@/lib/media';
 import type { Profile, Project } from '@/types/models';
 
 interface ProjectHeaderProps {
@@ -14,9 +14,7 @@ export function ProjectHeader({ project, owner }: ProjectHeaderProps) {
   const navigate = useNavigate();
   const ownerName = owner?.name ?? '匿名';
   const initials = ownerName.slice(0, 1).toUpperCase() || '?';
-  const avatarUrl = owner?.avatar_file_id
-    ? buildPreviewUrl(owner.avatar_file_id, 'avatar')
-    : undefined;
+  const avatarUrl = getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
 
   return (
     <div className="border-b bg-background">
@@ -42,7 +40,7 @@ export function ProjectHeader({ project, owner }: ProjectHeaderProps) {
 
         <div className="mt-4 flex items-center gap-2.5">
           <Avatar className="h-9 w-9">
-            {avatarUrl && <AvatarImage src={avatarUrl} alt={ownerName} />}
+            <AvatarImage src={avatarUrl} alt={ownerName} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">

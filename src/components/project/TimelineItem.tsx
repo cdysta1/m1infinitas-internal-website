@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2, RotateCw, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { buildPreviewUrl } from '@/lib/media';
+import { buildPreviewUrl, getAvatarUrl } from '@/lib/media';
 import { formatDateTime, formatRelativeTime, cn } from '@/lib/utils';
 import { OPTIMISTIC } from '@/lib/constants';
 import type { Profile, TimelineEntry } from '@/types/models';
@@ -21,9 +21,7 @@ export function TimelineItem({ entry, author, onRetry }: TimelineItemProps) {
 
   const authorName = author?.name ?? (entry.isLocal ? '我' : '匿名');
   const initials = authorName.slice(0, 1).toUpperCase() || '?';
-  const avatarUrl = author?.avatar_file_id
-    ? buildPreviewUrl(author.avatar_file_id, 'avatar')
-    : undefined;
+  const avatarUrl = getAvatarUrl(author?.avatar_file_id, author?.$id ?? entry.authorId);
 
   // Prefer local blob previews while uploading, fall back to CDN previews.
   const sources = entry.localPreviewUrls?.length
@@ -42,7 +40,7 @@ export function TimelineItem({ entry, author, onRetry }: TimelineItemProps) {
     >
       <div className="absolute left-0 top-0">
         <Avatar className="h-9 w-9">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt={authorName} />}
+          <AvatarImage src={avatarUrl} alt={authorName} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
       </div>
