@@ -17,36 +17,43 @@ const visualInterludes = [
     afterProject: 0,
     src: interludeImage('sufra-displaced-objects.png'),
     alt: 'Sufra Displaced Objects 展览海报',
+    ownerName: '余望',
   },
   {
     afterProject: 1,
     src: interludeImage('lavra-poster.png'),
     alt: 'Lavra 实验排版海报',
+    ownerName: '苏珂',
   },
   {
     afterProject: 2,
     src: interludeImage('cyborg-system.png'),
     alt: 'Cyborg System 视觉实验海报',
+    ownerName: '何野',
   },
   {
     afterProject: 3,
     src: interludeImage('pixel-roof.png'),
     alt: '建筑与像素图形拼贴',
+    ownerName: '林澈',
   },
   {
     afterProject: 4,
     src: interludeImage('organic-letterforms.png'),
     alt: '黑色背景上的有机字形实验',
+    ownerName: '苏珂',
   },
   {
     afterProject: 4,
     src: interludeImage('future-sculpture.png'),
     alt: 'Future is the sculpture 视觉研究海报',
+    ownerName: '何野',
   },
   {
     afterProject: 5,
     src: interludeImage('shigeto-poster.png'),
     alt: 'Shigeto 演出海报',
+    ownerName: '余望',
   },
 ] as const;
 
@@ -116,6 +123,7 @@ export function GalleryPage() {
                         key={interlude.src}
                         src={interlude.src}
                         alt={interlude.alt}
+                        ownerName={interlude.ownerName}
                       />
                     ))}
                   </Fragment>
