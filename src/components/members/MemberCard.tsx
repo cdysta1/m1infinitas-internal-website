@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { SmartImage } from '@/components/common/SmartImage';
 import { getAvatarUrl } from '@/lib/media';
 import type { MemberMeta } from '@/lib/memberDirectory';
@@ -14,12 +15,17 @@ interface MemberCardProps {
 
 export function MemberCard({ index, profile, projects, meta, compact = false }: MemberCardProps) {
   const avatarUrl = getAvatarUrl(profile.avatar_file_id, profile.$id);
+  const transitionStyle = {
+    viewTransitionName: `member-card-${profile.$id}`,
+  } as CSSProperties;
 
   if (compact) {
     return (
       <article
         aria-label={`${profile.name}：${meta.tags.join('、')}`}
-        className="flex h-24 items-center gap-3 overflow-hidden rounded-sm border bg-card p-2 shadow-[0_6px_18px_rgba(0,0,0,0.04)]"
+        data-member-card={profile.$id}
+        style={transitionStyle}
+        className="relative flex h-24 items-center gap-3 overflow-hidden rounded-sm border bg-card p-2 shadow-[0_6px_18px_rgba(0,0,0,0.04)]"
       >
         <SmartImage
           src={avatarUrl}
@@ -27,22 +33,29 @@ export function MemberCard({ index, profile, projects, meta, compact = false }: 
           wrapperClassName="h-20 w-20 shrink-0 rounded-sm"
           imgClassName="object-cover"
         />
-        <div className="flex min-w-0 flex-1 flex-wrap content-center gap-1.5" aria-label={`${profile.name} 的专长`}>
-          {meta.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border px-2.5 py-1 text-[11px] leading-none text-foreground/80"
-            >
-              {tag}
-            </span>
-          ))}
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-sm font-semibold">{profile.name}</h2>
+          <div className="mt-2 flex flex-wrap gap-1.5" aria-label={`${profile.name} 的专长`}>
+            {meta.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border px-2.5 py-1 text-[11px] leading-none text-foreground/80"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </article>
     );
   }
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-sm border bg-card p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+    <article
+      data-member-card={profile.$id}
+      style={transitionStyle}
+      className="relative flex h-full flex-col overflow-hidden rounded-sm border bg-card p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)]"
+    >
       <div className="flex items-center justify-between gap-3">
         <span className="rounded-full bg-foreground px-2.5 py-1 text-[10px] font-medium text-background">
           {meta.areas[0]}

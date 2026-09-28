@@ -79,6 +79,30 @@
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.35);
   }
+
+  html.member-layout-transition::view-transition-old(root),
+  html.member-layout-transition::view-transition-new(root) {
+    animation: none;
+  }
+
+  html.member-layout-transition::view-transition-group(*) {
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html.member-layout-transition::view-transition-old(*),
+  html.member-layout-transition::view-transition-new(*) {
+    animation-duration: 260ms;
+    animation-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.member-layout-transition::view-transition-group(*),
+    html.member-layout-transition::view-transition-old(*),
+    html.member-layout-transition::view-transition-new(*) {
+      animation-duration: 0.01ms;
+    }
+  }
 }
 
 @layer utilities {

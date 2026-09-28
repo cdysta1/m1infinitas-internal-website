@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, Search } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -13,10 +14,42 @@ import {
 } from '@/lib/memberDirectory';
 import { cn } from '@/lib/utils';
 
+interface MemberViewTransition {
+  finished: Promise<void>;
+}
+
+type TransitionDocument = Document & {
+  startViewTransition?: (update: () => void) => MemberViewTransition;
+};
+
 export function MembersPage() {
   const [activeArea, setActiveArea] = useState<(typeof MEMBER_AREAS)[number]>('全部');
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
   const { data: members = [], isLoading, error } = useMembersDirectory();
+
+  const changeViewMode = (nextMode: 'cards' | 'compact') => {
+    if (nextMode === viewMode) return;
+
+    const transitionDocument = document as TransitionDocument;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      setViewMode(nextMode);
+      return;
+    }
+
+    if (!transitionDocument.startViewTransition) {
+      animateMemberLayoutChange(() => setViewMode(nextMode));
+      return;
+    }
+
+    document.documentElement.classList.add('member-layout-transition');
+    const transition = transitionDocument.startViewTransition(() => {
+      flushSync(() => setViewMode(nextMode));
+    });
+    void transition.finished.finally(() => {
+      document.documentElement.classList.remove('member-layout-transition');
+    });
+  };
 
   const visibleMembers = useMemo(() => {
     return members
@@ -58,7 +91,7 @@ export function MembersPage() {
             >
               <button
                 type="button"
-                onClick={() => setViewMode('compact')}
+                onClick={() => changeViewMode('compact')}
                 aria-label="收缩为条状视图"
                 title="收缩为条状视图"
                 aria-pressed={viewMode === 'compact'}
@@ -73,7 +106,7 @@ export function MembersPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('cards')}
+                onClick={() => changeViewMode('cards')}
                 aria-label="展开为卡片视图"
                 title="展开为卡片视图"
                 aria-pressed={viewMode === 'cards'}
@@ -132,9 +165,8 @@ export function MembersPage() {
           </div>
         ) : (
           <div
-            key={viewMode}
             className={cn(
-              'grid animate-scale-in motion-reduce:animate-none',
+              'grid',
               viewMode === 'compact'
                 ? 'gap-2 sm:grid-cols-2'
                 : 'gap-5 sm:grid-cols-2 lg:grid-cols-3',
@@ -155,6 +187,54 @@ export function MembersPage() {
       </div>
     </AppShell>
   );
+}
+
+function animateMemberLayoutChange(update: () => void) {
+  const currentCards = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-member-card]'),
+  );
+  currentCards.forEach((card) => card.getAnimations().forEach((animation) => animation.cancel()));
+
+  const before = new Map(
+    currentCards.map((card) => [card.dataset.memberCard ?? '', card.getBoundingClientRect()]),
+  );
+
+  flushSync(update);
+
+  document.querySelectorAll<HTMLElement>('[data-member-card]').forEach((card) => {
+    const previous = before.get(card.dataset.memberCard ?? '');
+    if (!previous) return;
+
+    const next = card.getBoundingClientRect();
+    const deltaX = previous.left - next.left;
+    const deltaY = previous.top - next.top;
+    const scaleX = previous.width / next.width;
+    const scaleY = previous.height / next.height;
+
+    card.style.zIndex = '1';
+    const animation = card.animate(
+      [
+        {
+          transformOrigin: 'top left',
+          transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`,
+          opacity: 0.82,
+        },
+        {
+          transformOrigin: 'top left',
+          transform: 'translate(0, 0) scale(1, 1)',
+          opacity: 1,
+        },
+      ],
+      {
+        duration: 440,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'both',
+      },
+    );
+    animation.finished.finally(() => {
+      card.style.zIndex = '';
+    });
+  });
 }
 
 function MembersSkeleton({ compact = false }: { compact?: boolean }) {
