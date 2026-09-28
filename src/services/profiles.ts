@@ -1,6 +1,8 @@
 import { Permission, Role } from 'appwrite';
 import { COLLECTIONS, DATABASE_ID, databases } from '@/lib/appwrite';
 import type { Profile } from '@/types/models';
+import { env } from '@/lib/env';
+import { demoCreateProfile, demoGetProfile, demoGetProfilesByIds, demoUpdateProfile } from '@/demo/store';
 
 export interface ProfileInput {
   name: string;
@@ -14,6 +16,7 @@ export async function createProfile(
   userId: string,
   data: ProfileInput,
 ): Promise<Profile> {
+  if (env.demoMode) return demoCreateProfile(userId, data);
   return databases.createDocument<Profile>(
     DATABASE_ID,
     COLLECTIONS.profiles,
@@ -33,6 +36,7 @@ export async function createProfile(
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
+  if (env.demoMode) return demoGetProfile(userId);
   try {
     return await databases.getDocument<Profile>(
       DATABASE_ID,
@@ -51,6 +55,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 export async function getProfilesByIds(
   userIds: string[],
 ): Promise<Map<string, Profile>> {
+  if (env.demoMode) return demoGetProfilesByIds(userIds);
   const unique = Array.from(new Set(userIds.filter(Boolean)));
   if (unique.length === 0) return new Map();
 
@@ -72,6 +77,7 @@ export async function updateProfile(
   userId: string,
   patch: Partial<ProfileInput>,
 ): Promise<Profile> {
+  if (env.demoMode) return demoUpdateProfile(userId, patch);
   return databases.updateDocument<Profile>(
     DATABASE_ID,
     COLLECTIONS.profiles,

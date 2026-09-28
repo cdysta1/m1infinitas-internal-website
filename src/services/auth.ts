@@ -2,6 +2,7 @@ import { ID, Models } from 'appwrite';
 import { account } from '@/lib/appwrite';
 import { env } from '@/lib/env';
 import { createProfile } from './profiles';
+import { demoUser } from '@/demo/store';
 
 export interface RegisterInput {
   email: string;
@@ -41,6 +42,7 @@ async function settleSession(): Promise<Models.User<Models.Preferences>> {
 // Create a new account after verifying the global invite code,
 // then bootstrap the profile document with the same $id as the user.
 export async function register(input: RegisterInput): Promise<Models.User<Models.Preferences>> {
+  if (env.demoMode) return demoUser;
   if (!env.inviteCode) {
     // Fail loud in dev if the invite code env var is not set.
     throw new Error('VITE_INVITE_CODE 未配置，无法开启注册');
@@ -73,11 +75,13 @@ export async function register(input: RegisterInput): Promise<Models.User<Models
 }
 
 export async function login(email: string, password: string): Promise<Models.User<Models.Preferences>> {
+  if (env.demoMode) return demoUser;
   await account.createEmailPasswordSession(email, password);
   return settleSession();
 }
 
 export async function logout(): Promise<void> {
+  if (env.demoMode) return;
   try {
     await account.deleteSession('current');
   } catch {
@@ -87,6 +91,7 @@ export async function logout(): Promise<void> {
 
 // Returns null when there is no active session (Appwrite throws 401).
 export async function getCurrentUser(): Promise<Models.User<Models.Preferences> | null> {
+  if (env.demoMode) return demoUser;
   try {
     return await account.get();
   } catch (err) {

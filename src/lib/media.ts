@@ -16,6 +16,7 @@ export function buildPreviewUrl(
   fileId: string,
   preset: ImgPreset = 'cover',
 ): string {
+  if (/^(https?:|data:|blob:)/.test(fileId)) return fileId;
   const params = new URLSearchParams({ project: client.config.project });
   if (IMG_TRANSFORM_ENABLED) {
     const { width, quality, output } = IMG_PRESETS[preset];

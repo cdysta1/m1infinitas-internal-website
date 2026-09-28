@@ -2,6 +2,8 @@ import { ID, Permission, Query, Role } from 'appwrite';
 import { COLLECTIONS, DATABASE_ID, databases, realtime } from '@/lib/appwrite';
 import { TIMELINE_PAGE_SIZE } from '@/lib/constants';
 import type { UpdateItem } from '@/types/models';
+import { env } from '@/lib/env';
+import { demoCreateUpdate, demoDeleteUpdate, demoListUpdates, demoSubscribeUpdates } from '@/demo/store';
 
 export interface CreateUpdateInput {
   project_id: string;
@@ -21,6 +23,7 @@ export async function listUpdatesByProject(
   projectId: string,
   opts: { limit?: number; cursor?: string } = {},
 ): Promise<ListUpdatesResult> {
+  if (env.demoMode) return demoListUpdates(projectId, opts);
   const limit = opts.limit ?? TIMELINE_PAGE_SIZE;
   const queries: string[] = [
     Query.equal('project_id', projectId),
@@ -43,6 +46,7 @@ export async function listUpdatesByProject(
 }
 
 export async function createUpdate(input: CreateUpdateInput): Promise<UpdateItem> {
+  if (env.demoMode) return demoCreateUpdate(input);
   const now = new Date().toISOString();
   return databases.createDocument<UpdateItem>(
     DATABASE_ID,
@@ -64,6 +68,7 @@ export async function createUpdate(input: CreateUpdateInput): Promise<UpdateItem
 }
 
 export async function deleteUpdate(id: string): Promise<void> {
+  if (env.demoMode) return demoDeleteUpdate(id);
   await databases.deleteDocument(DATABASE_ID, COLLECTIONS.updates, id);
 }
 
@@ -73,6 +78,7 @@ export async function deleteUpdate(id: string): Promise<void> {
 export function subscribeUpdates(
   handler: (payload: RealtimeUpdatePayload) => void,
 ): () => void {
+  if (env.demoMode) return demoSubscribeUpdates(handler);
   const channel = `databases.${DATABASE_ID}.collections.${COLLECTIONS.updates}.documents`;
   return realtime.subscribe<RealtimeUpdatePayload>([channel], (event) => {
     const payload = event.payload;
