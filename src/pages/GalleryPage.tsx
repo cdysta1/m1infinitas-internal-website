@@ -41,8 +41,7 @@ export function GalleryPage() {
 
   return (
     <AppShell onCreateClick={() => setCreateOpen(true)}>
-      <div className="min-h-[calc(100dvh-3.5rem)] bg-zinc-100/70">
-        <div className="mx-auto max-w-6xl px-3 py-4 sm:px-4">
+      <div className="mx-auto max-w-6xl px-3 py-4 sm:px-4">
         {isLoading ? (
           <MasonrySkeleton count={8} />
         ) : projects.length === 0 ? (
@@ -99,7 +98,6 @@ export function GalleryPage() {
             </button>
           </div>
         )}
-        </div>
       </div>
 
       <CreateProjectDrawer open={createOpen} onOpenChange={setCreateOpen} />
