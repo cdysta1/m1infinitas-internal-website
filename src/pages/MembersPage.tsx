@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { DirectoryTabs } from '@/components/layout/DirectoryTabs';
 import { MemberCard } from '@/components/members/MemberCard';
@@ -44,8 +46,18 @@ export function MembersPage() {
               从创作方向和学科专长认识团队，找到下一次协作需要的人。
             </p>
           </div>
-          <div className="font-mono text-xs text-muted-foreground">
-            {String(members.length).padStart(2, '0')} MEMBERS
+          <div className="flex items-center gap-3">
+            <div className="font-mono text-xs text-muted-foreground">
+              {String(members.length).padStart(2, '0')} MEMBERS
+            </div>
+            <Link
+              to="/members/search"
+              aria-label="搜索成员"
+              title="搜索成员"
+              className="flex h-9 w-9 items-center justify-center rounded-full border text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Search className="h-4 w-4" />
+            </Link>
           </div>
         </header>
 

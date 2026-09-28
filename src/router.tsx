@@ -4,6 +4,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { GalleryPage } from '@/pages/GalleryPage';
 import { MembersPage } from '@/pages/MembersPage';
+import { MemberSearchPage } from '@/pages/MemberSearchPage';
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
 import { MePage } from '@/pages/MePage';
 
@@ -39,6 +40,14 @@ export const router = createHashRouter([
     element: (
       <RequireAuth>
         <MembersPage />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: '/members/search',
+    element: (
+      <RequireAuth>
+        <MemberSearchPage />
       </RequireAuth>
     ),
   },
