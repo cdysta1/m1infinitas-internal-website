@@ -2,11 +2,11 @@ import type { Models } from 'appwrite';
 import { PAGE_SIZE, PROJECT_STATUS, TIMELINE_PAGE_SIZE, type ProjectStatus } from '@/lib/constants';
 import type { Profile, Project, UpdateItem } from '@/types/models';
 
-const STORAGE_KEY = 'm1-infinitas-demo-v5';
+const STORAGE_KEY = 'm1-infinitas-demo-v6';
 export const DEMO_USER_ID = 'demo-user-lin';
 
 interface DemoState {
-  version: 5;
+  version: 6;
   profiles: Profile[];
   projects: Project[];
   updates: UpdateItem[];
@@ -19,13 +19,25 @@ let memoryState: DemoState | null = null;
 const demoCover = (fileName: string) =>
   new URL(`${import.meta.env.BASE_URL}demo/covers/${fileName}`, window.location.origin).href;
 
+const demoProcess = (fileName: string) =>
+  new URL(`${import.meta.env.BASE_URL}demo/process/${fileName}`, window.location.origin).href;
+
 const covers = {
-  portrait: demoCover('green-portrait.png'),
-  between: demoCover('between-poster.png'),
-  thinking: demoCover('thinking-spring.png'),
-  nurture: demoCover('nurture-poster-a.png'),
-  culturehub: demoCover('culturehub-residency.png'),
-  voronoi: demoCover('voronoi-poster.png'),
+  portrait: demoCover('green-portrait-bw.png'),
+  between: demoCover('between-poster-bw.png'),
+  thinking: demoCover('thinking-spring-bw.png'),
+  nurture: demoCover('nurture-poster-bw.png'),
+  culturehub: demoCover('culturehub-residency-bw.png'),
+  voronoi: demoCover('voronoi-poster-bw.png'),
+} as const;
+
+const processImages = {
+  portrait: demoProcess('double-surface-process.png'),
+  between: demoProcess('between-process.png'),
+  thinking: demoProcess('thinking-spring-process.png'),
+  nurture: demoProcess('nurture-process.png'),
+  culturehub: demoProcess('residency-process.png'),
+  voronoi: demoProcess('voronoi-process.png'),
 } as const;
 
 export const demoUser = {
@@ -73,8 +85,8 @@ function createSeedState(): DemoState {
   const projects: Project[] = [
     {
       ...metadata('demo-project-light', 'projects', iso(96)),
-      title: '双生表面：绿色覆层实验',
-      summary: '以 3D 扫描、石膏翻模与绿色介质叠加，研究身体图像的复制与共生。',
+      title: '双生表面：覆层实验',
+      summary: '以 3D 扫描、石膏翻模与明暗介质叠加，研究身体图像的复制与共生。',
       cover_file_id: covers.portrait,
       owner_id: DEMO_USER_ID,
       status: PROJECT_STATUS.ACTIVE,
@@ -131,7 +143,7 @@ function createSeedState(): DemoState {
     {
       ...metadata('demo-update-light-3', 'updates', iso(2)),
       project_id: 'demo-project-light',
-      content: '完成绿色覆层的第三轮测试。透明度降到 62% 后，两张面孔终于能在鼻梁和眼窝处同时成立。',
+      content: '完成深色覆层的第三轮测试。透明度降到 62% 后，两张面孔终于能在鼻梁和眼窝处同时成立。',
       author_id: DEMO_USER_ID,
       file_ids: [covers.portrait],
       created_at: iso(2),
@@ -141,7 +153,7 @@ function createSeedState(): DemoState {
       project_id: 'demo-project-light',
       content: '两组头部扫描和石膏翻模已对齐，保留扫描断层，让数字模型与实体表面的误差直接可见。',
       author_id: 'demo-user-su',
-      file_ids: [],
+      file_ids: [processImages.portrait],
       created_at: iso(30),
     },
     {
@@ -155,7 +167,7 @@ function createSeedState(): DemoState {
     {
       ...metadata('demo-update-paper-2', 'updates', iso(7)),
       project_id: 'demo-project-paper',
-      content: '主海报完成最终打样。荧光绿在未涂布纸上的层次保留下来了，人物肤色也没有被底色吃掉。',
+      content: '主海报完成灰阶打样。不同明度在未涂布纸上的层次保留下来了，人物轮廓也没有被底色吃掉。',
       author_id: 'demo-user-yu',
       file_ids: [covers.between],
       created_at: iso(7),
@@ -165,7 +177,7 @@ function createSeedState(): DemoState {
       project_id: 'demo-project-paper',
       content: '中英文字级、展期和艺术家信息已经统一，下一步按同一网格展开邀请函与现场导视。',
       author_id: 'demo-user-he',
-      file_ids: [],
+      file_ids: [processImages.between],
       created_at: iso(180),
     },
     {
@@ -181,7 +193,7 @@ function createSeedState(): DemoState {
       project_id: 'demo-project-room',
       content: '完成公园现场取景，保留人物的日常尺度，让文字像从草地和树线之间自然冒出来。',
       author_id: 'demo-user-he',
-      file_ids: [],
+      file_ids: [processImages.thinking],
       created_at: iso(64),
     },
     {
@@ -197,13 +209,13 @@ function createSeedState(): DemoState {
       project_id: 'demo-project-color',
       content: '确定以大面积留白包围花地，人物保持低饱和，只留下几处高亮标记作为生长坐标。',
       author_id: 'demo-user-yu',
-      file_ids: [],
+      file_ids: [processImages.nurture],
       created_at: iso(104),
     },
     {
       ...metadata('demo-update-field-2', 'updates', iso(88)),
       project_id: 'demo-project-field',
-      content: '驻留主视觉第一版完成：用点阵人群表现迁移路径，蓝绿两组角色代表实体空间与算法身份。',
+      content: '驻留主视觉第一版完成：用点阵人群表现迁移路径，明暗两组角色代表实体空间与算法身份。',
       author_id: 'demo-user-he',
       file_ids: [covers.culturehub],
       created_at: iso(88),
@@ -213,7 +225,7 @@ function createSeedState(): DemoState {
       project_id: 'demo-project-field',
       content: '申请文本完成约 70%，已补齐合作方式、六个月时间线和从纽约到柏林的研究路线。',
       author_id: DEMO_USER_ID,
-      file_ids: [],
+      file_ids: [processImages.culturehub],
       created_at: iso(150),
     },
     {
@@ -227,14 +239,14 @@ function createSeedState(): DemoState {
     {
       ...metadata('demo-update-stage-1', 'updates', iso(196)),
       project_id: 'demo-project-stage',
-      content: '确定使用绿色半调与黑底，并保留公式说明，让视觉结果和生成逻辑同时出现在画面里。',
+      content: '确定使用灰阶半调与黑底，并保留公式说明，让视觉结果和生成逻辑同时出现在画面里。',
       author_id: 'demo-user-su',
-      file_ids: [],
+      file_ids: [processImages.voronoi],
       created_at: iso(196),
     },
   ];
 
-  return { version: 5, profiles, projects, updates };
+  return { version: 6, profiles, projects, updates };
 }
 
 function getState(): DemoState {
@@ -243,7 +255,7 @@ function getState(): DemoState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as DemoState;
-      if (parsed.version === 5) {
+      if (parsed.version === 6) {
         memoryState = parsed;
         return memoryState;
       }
