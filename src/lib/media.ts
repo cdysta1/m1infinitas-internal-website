@@ -41,6 +41,8 @@ const DEMO_AVATAR_INDEX: Record<string, number> = {
   'demo-user-yu': 1,
   'demo-user-su': 2,
   'demo-user-he': 3,
+  'demo-user-iris': 4,
+  'demo-user-elodie': 5,
 };
 
 function stableAvatarIndex(seed: string): number {

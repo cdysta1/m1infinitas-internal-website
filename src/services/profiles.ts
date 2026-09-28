@@ -1,8 +1,8 @@
-import { Permission, Role } from 'appwrite';
+import { Permission, Query, Role } from 'appwrite';
 import { COLLECTIONS, DATABASE_ID, databases } from '@/lib/appwrite';
 import type { Profile } from '@/types/models';
 import { env } from '@/lib/env';
-import { demoCreateProfile, demoGetProfile, demoGetProfilesByIds, demoUpdateProfile } from '@/demo/store';
+import { demoCreateProfile, demoGetProfile, demoGetProfilesByIds, demoListProfiles, demoUpdateProfile } from '@/demo/store';
 
 export interface ProfileInput {
   name: string;
@@ -71,6 +71,16 @@ export async function getProfilesByIds(
     }
   });
   return map;
+}
+
+export async function listProfiles(limit = 100): Promise<Profile[]> {
+  if (env.demoMode) return demoListProfiles(limit);
+  const result = await databases.listDocuments<Profile>(
+    DATABASE_ID,
+    COLLECTIONS.profiles,
+    [Query.limit(limit)],
+  );
+  return result.documents;
 }
 
 export async function updateProfile(

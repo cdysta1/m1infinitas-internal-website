@@ -2,11 +2,11 @@ import type { Models } from 'appwrite';
 import { PAGE_SIZE, PROJECT_STATUS, TIMELINE_PAGE_SIZE, type ProjectStatus } from '@/lib/constants';
 import type { Profile, Project, UpdateItem } from '@/types/models';
 
-const STORAGE_KEY = 'm1-infinitas-demo-v8';
+const STORAGE_KEY = 'm1-infinitas-demo-v9';
 export const DEMO_USER_ID = 'demo-user-lin';
 
 interface DemoState {
-  version: 8;
+  version: 9;
   profiles: Profile[];
   projects: Project[];
   updates: UpdateItem[];
@@ -30,6 +30,8 @@ const DEMO_USER_NAME_INDEX: Record<string, number> = {
   'demo-user-yu': 1,
   'demo-user-su': 2,
   'demo-user-he': 3,
+  'demo-user-iris': 4,
+  'demo-user-elodie': 5,
 };
 
 function getDefaultUserName(userId: string): string {
@@ -120,6 +122,8 @@ function createSeedState(): DemoState {
     { ...metadata('demo-user-yu', 'profiles', iso(680)), name: getDefaultUserName('demo-user-yu'), wechat: 'elias_art', avatar_file_id: '' },
     { ...metadata('demo-user-su', 'profiles', iso(640)), name: getDefaultUserName('demo-user-su'), wechat: 'adrianophelia_space', avatar_file_id: '' },
     { ...metadata('demo-user-he', 'profiles', iso(600)), name: getDefaultUserName('demo-user-he'), wechat: 'sylvia_field', avatar_file_id: '' },
+    { ...metadata('demo-user-iris', 'profiles', iso(560)), name: getDefaultUserName('demo-user-iris'), wechat: 'iris_space', avatar_file_id: '' },
+    { ...metadata('demo-user-elodie', 'profiles', iso(520)), name: getDefaultUserName('demo-user-elodie'), wechat: 'elodie_motion', avatar_file_id: '' },
   ];
 
   const projects: Project[] = [
@@ -405,7 +409,7 @@ function createSeedState(): DemoState {
     },
   ];
 
-  return { version: 8, profiles, projects, updates };
+  return { version: 9, profiles, projects, updates };
 }
 
 function getState(): DemoState {
@@ -414,7 +418,7 @@ function getState(): DemoState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as DemoState;
-      if (parsed.version === 8) {
+      if (parsed.version === 9) {
         memoryState = parsed;
         return memoryState;
       }
@@ -468,6 +472,10 @@ export async function demoGetProfilesByIds(userIds: string[]): Promise<Map<strin
       .filter((profile) => wanted.has(profile.$id))
       .map((profile) => [profile.$id, profile]),
   );
+}
+
+export async function demoListProfiles(limit = 100): Promise<Profile[]> {
+  return getState().profiles.slice(0, limit);
 }
 
 export async function demoUpdateProfile(userId: string, patch: Partial<{ name: string; wechat: string; avatar_file_id: string }>): Promise<Profile> {
