@@ -24,6 +24,11 @@ const visualInterludes = [
     alt: 'Lavra 实验排版海报',
   },
   {
+    afterProject: 2,
+    src: interludeImage('cyborg-system.png'),
+    alt: 'Cyborg System 视觉实验海报',
+  },
+  {
     afterProject: 3,
     src: interludeImage('pixel-roof.png'),
     alt: '建筑与像素图形拼贴',
@@ -32,6 +37,16 @@ const visualInterludes = [
     afterProject: 4,
     src: interludeImage('organic-letterforms.png'),
     alt: '黑色背景上的有机字形实验',
+  },
+  {
+    afterProject: 4,
+    src: interludeImage('future-sculpture.png'),
+    alt: 'Future is the sculpture 视觉研究海报',
+  },
+  {
+    afterProject: 5,
+    src: interludeImage('shigeto-poster.png'),
+    alt: 'Shigeto 演出海报',
   },
 ] as const;
 
@@ -85,7 +100,7 @@ export function GalleryPage() {
           <>
             <MasonryGrid>
               {projects.map((p, index) => {
-                const interlude = visualInterludes.find((item) => item.afterProject === index);
+                const interludes = visualInterludes.filter((item) => item.afterProject === index);
 
                 return (
                   <Fragment key={p.$id}>
@@ -96,7 +111,13 @@ export function GalleryPage() {
                       pending={!p.cover_file_id}
                       failed={p.summary.startsWith('[发布失败]')}
                     />
-                    {interlude && <VisualInterludeCard src={interlude.src} alt={interlude.alt} />}
+                    {interludes.map((interlude) => (
+                      <VisualInterludeCard
+                        key={interlude.src}
+                        src={interlude.src}
+                        alt={interlude.alt}
+                      />
+                    ))}
                   </Fragment>
                 );
               })}
