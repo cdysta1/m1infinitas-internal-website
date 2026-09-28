@@ -2,11 +2,11 @@ import type { Models } from 'appwrite';
 import { PAGE_SIZE, PROJECT_STATUS, TIMELINE_PAGE_SIZE, type ProjectStatus } from '@/lib/constants';
 import type { Profile, Project, UpdateItem } from '@/types/models';
 
-const STORAGE_KEY = 'm1-infinitas-demo-v4';
+const STORAGE_KEY = 'm1-infinitas-demo-v5';
 export const DEMO_USER_ID = 'demo-user-lin';
 
 interface DemoState {
-  version: 4;
+  version: 5;
   profiles: Profile[];
   projects: Project[];
   updates: UpdateItem[];
@@ -15,16 +15,6 @@ interface DemoState {
 const projectListeners = new Set<() => void>();
 const updateListeners = new Set<(update: UpdateItem) => void>();
 let memoryState: DemoState | null = null;
-
-const images = {
-  studio: 'https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=1200&q=85',
-  paper: 'https://images.unsplash.com/photo-1523726491678-bf852e717f6a?auto=format&fit=crop&w=1200&q=85',
-  space: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85',
-  paint: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=1200&q=85',
-  field: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85',
-  stage: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1200&q=85',
-  tools: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=1200&q=85',
-} as const;
 
 const demoCover = (fileName: string) =>
   new URL(`${import.meta.env.BASE_URL}demo/covers/${fileName}`, window.location.origin).href;
@@ -83,8 +73,8 @@ function createSeedState(): DemoState {
   const projects: Project[] = [
     {
       ...metadata('demo-project-light', 'projects', iso(96)),
-      title: '光线采样计划',
-      summary: '记录一天中不同时间落在旧厂房里的光，准备转化成一组装置。',
+      title: '双生表面：绿色覆层实验',
+      summary: '以 3D 扫描、石膏翻模与绿色介质叠加，研究身体图像的复制与共生。',
       cover_file_id: covers.portrait,
       owner_id: DEMO_USER_ID,
       status: PROJECT_STATUS.ACTIVE,
@@ -92,8 +82,8 @@ function createSeedState(): DemoState {
     },
     {
       ...metadata('demo-project-paper', 'projects', iso(180)),
-      title: '纸上城市：第二阶段',
-      summary: '把成员收集的城市边角料做成可展开的手工书。',
+      title: '之间 BETWEEN｜展览视觉',
+      summary: '为双人展《之间》整理主视觉、印刷物和现场导视系统。',
       cover_file_id: covers.between,
       owner_id: 'demo-user-yu',
       status: PROJECT_STATUS.ACTIVE,
@@ -101,8 +91,8 @@ function createSeedState(): DemoState {
     },
     {
       ...metadata('demo-project-room', 'projects', iso(260)),
-      title: '临时房间 No. 3',
-      summary: '为十月开放日搭建一个能被声音改变的共享空间。',
+      title: 'Thinking Spring｜春日文字实验',
+      summary: '把 Thinking 与 Spring 作为生长中的文本，在公园影像里建立一条上升路径。',
       cover_file_id: covers.thinking,
       owner_id: 'demo-user-su',
       status: PROJECT_STATUS.ACTIVE,
@@ -110,8 +100,8 @@ function createSeedState(): DemoState {
     },
     {
       ...metadata('demo-project-color', 'projects', iso(320)),
-      title: '失焦色谱',
-      summary: '继续测试大尺幅色层叠加，寻找更轻的边缘关系。',
+      title: 'NURTURE｜生长档案',
+      summary: '用像素切片重组花地与身体，讨论照料、记忆和数字图像的生长方式。',
       cover_file_id: covers.nurture,
       owner_id: DEMO_USER_ID,
       status: PROJECT_STATUS.ACTIVE,
@@ -119,8 +109,8 @@ function createSeedState(): DemoState {
     },
     {
       ...metadata('demo-project-field', 'projects', iso(410)),
-      title: '河岸声音地图',
-      summary: '沿河记录环境声与居民口述，计划制作步行聆听路线。',
+      title: 'Space & Algorithms｜驻留提案',
+      summary: '围绕城市迁移、身体数据与算法空间，准备 2026–2027 驻留计划。',
       cover_file_id: covers.culturehub,
       owner_id: 'demo-user-he',
       status: PROJECT_STATUS.ACTIVE,
@@ -128,8 +118,8 @@ function createSeedState(): DemoState {
     },
     {
       ...metadata('demo-project-stage', 'projects', iso(500)),
-      title: '身体与回声排练',
-      summary: '三位表演者围绕延迟、重复和错位进行的阶段性实验。',
+      title: 'Voronoi 01｜邻域生成实验',
+      summary: '以 Voronoi 分区为方法，把人物影像转译成由距离、种子点和噪声构成的视觉系统。',
       cover_file_id: covers.voronoi,
       owner_id: 'demo-user-yu',
       status: PROJECT_STATUS.ACTIVE,
@@ -141,23 +131,23 @@ function createSeedState(): DemoState {
     {
       ...metadata('demo-update-light-3', 'updates', iso(2)),
       project_id: 'demo-project-light',
-      content: '下午四点的光最接近想要的密度。今天把第三组反射板的位置定下来了，明天继续测材料。',
+      content: '完成绿色覆层的第三轮测试。透明度降到 62% 后，两张面孔终于能在鼻梁和眼窝处同时成立。',
       author_id: DEMO_USER_ID,
-      file_ids: [images.studio, images.tools],
+      file_ids: [covers.portrait],
       created_at: iso(2),
     },
     {
       ...metadata('demo-update-light-2', 'updates', iso(30)),
       project_id: 'demo-project-light',
-      content: '第一次现场测量，墙面反光比预想中更强，决定保留这个偶然出现的亮区。',
+      content: '两组头部扫描和石膏翻模已对齐，保留扫描断层，让数字模型与实体表面的误差直接可见。',
       author_id: 'demo-user-su',
-      file_ids: [images.space],
+      file_ids: [],
       created_at: iso(30),
     },
     {
       ...metadata('demo-update-light-1', 'updates', iso(96)),
       project_id: 'demo-project-light',
-      content: '项目启动：先连续记录一周，再从影像里选择装置的时间线。',
+      content: '项目启动：从“同一张脸能否同时属于两个身体”出发，先测试扫描、翻模与液态材料三种表面。',
       author_id: DEMO_USER_ID,
       file_ids: [],
       created_at: iso(96),
@@ -165,54 +155,86 @@ function createSeedState(): DemoState {
     {
       ...metadata('demo-update-paper-2', 'updates', iso(7)),
       project_id: 'demo-project-paper',
-      content: '装订方式改成了裸脊，展开后更像一条街。今晚完成了第一本样书。',
+      content: '主海报完成最终打样。荧光绿在未涂布纸上的层次保留下来了，人物肤色也没有被底色吃掉。',
       author_id: 'demo-user-yu',
-      file_ids: [images.paper, images.paint],
+      file_ids: [covers.between],
       created_at: iso(7),
     },
     {
       ...metadata('demo-update-paper-1', 'updates', iso(180)),
       project_id: 'demo-project-paper',
-      content: '收到第一批成员寄来的票据、包装纸和手写路线。',
+      content: '中英文字级、展期和艺术家信息已经统一，下一步按同一网格展开邀请函与现场导视。',
       author_id: 'demo-user-he',
-      file_ids: [images.tools],
+      file_ids: [],
       created_at: iso(180),
     },
     {
       ...metadata('demo-update-room-2', 'updates', iso(22)),
       project_id: 'demo-project-room',
-      content: '四块移动墙已经到场，走动时声音会从不同缝隙里穿出来。',
+      content: '文字路径由横向改为向上生长，Thinking 和 Spring 的密度会随着高度逐渐增加。',
       author_id: 'demo-user-su',
-      file_ids: [images.space],
+      file_ids: [covers.thinking],
       created_at: iso(22),
     },
     {
-      ...metadata('demo-update-color-1', 'updates', iso(50)),
+      ...metadata('demo-update-room-1', 'updates', iso(64)),
+      project_id: 'demo-project-room',
+      content: '完成公园现场取景，保留人物的日常尺度，让文字像从草地和树线之间自然冒出来。',
+      author_id: 'demo-user-he',
+      file_ids: [],
+      created_at: iso(64),
+    },
+    {
+      ...metadata('demo-update-color-2', 'updates', iso(50)),
       project_id: 'demo-project-color',
-      content: '新的罩染比例稳定下来了，保留这次偏冷的底色继续推进。',
+      content: '像素边缘从规则矩形改成不连续切片，花地的轮廓更像一段正在加载的记忆。',
       author_id: DEMO_USER_ID,
-      file_ids: [images.paint],
+      file_ids: [covers.nurture],
       created_at: iso(50),
     },
     {
-      ...metadata('demo-update-field-1', 'updates', iso(88)),
+      ...metadata('demo-update-color-1', 'updates', iso(104)),
+      project_id: 'demo-project-color',
+      content: '确定以大面积留白包围花地，人物保持低饱和，只留下几处高亮标记作为生长坐标。',
+      author_id: 'demo-user-yu',
+      file_ids: [],
+      created_at: iso(104),
+    },
+    {
+      ...metadata('demo-update-field-2', 'updates', iso(88)),
       project_id: 'demo-project-field',
-      content: '完成北岸第一轮采集，意外录到了凌晨卸货和潮水交叠的声音。',
+      content: '驻留主视觉第一版完成：用点阵人群表现迁移路径，蓝绿两组角色代表实体空间与算法身份。',
       author_id: 'demo-user-he',
-      file_ids: [images.field],
+      file_ids: [covers.culturehub],
       created_at: iso(88),
     },
     {
-      ...metadata('demo-update-stage-1', 'updates', iso(126)),
+      ...metadata('demo-update-field-1', 'updates', iso(150)),
+      project_id: 'demo-project-field',
+      content: '申请文本完成约 70%，已补齐合作方式、六个月时间线和从纽约到柏林的研究路线。',
+      author_id: DEMO_USER_ID,
+      file_ids: [],
+      created_at: iso(150),
+    },
+    {
+      ...metadata('demo-update-stage-2', 'updates', iso(126)),
       project_id: 'demo-project-stage',
-      content: '第一次合排结束。下一轮会把观众的移动也纳入节奏。',
+      content: '完成第一组 Voronoi 参数测试。种子点减少后，人物轮廓从噪声里显现得更慢，空间感更接近预期。',
       author_id: 'demo-user-yu',
-      file_ids: [images.stage],
+      file_ids: [covers.voronoi],
       created_at: iso(126),
+    },
+    {
+      ...metadata('demo-update-stage-1', 'updates', iso(196)),
+      project_id: 'demo-project-stage',
+      content: '确定使用绿色半调与黑底，并保留公式说明，让视觉结果和生成逻辑同时出现在画面里。',
+      author_id: 'demo-user-su',
+      file_ids: [],
+      created_at: iso(196),
     },
   ];
 
-  return { version: 4, profiles, projects, updates };
+  return { version: 5, profiles, projects, updates };
 }
 
 function getState(): DemoState {
@@ -221,7 +243,7 @@ function getState(): DemoState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as DemoState;
-      if (parsed.version === 4) {
+      if (parsed.version === 5) {
         memoryState = parsed;
         return memoryState;
       }
