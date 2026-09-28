@@ -41,8 +41,8 @@ export function GalleryPage() {
   }, [sentinel, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <AppShell onCreateClick={() => setCreateOpen(true)}>
-      <DirectoryTabs />
+    <AppShell showCreate={false}>
+      <DirectoryTabs onCreateClick={() => setCreateOpen(true)} />
       <div className="mx-auto max-w-6xl px-3 py-4 sm:px-4">
         {isLoading ? (
           <MasonrySkeleton count={8} />

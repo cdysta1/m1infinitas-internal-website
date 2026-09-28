@@ -6,6 +6,8 @@ import { AppShell } from '@/components/layout/AppShell';
 import { DirectoryTabs } from '@/components/layout/DirectoryTabs';
 import { MemberCard } from '@/components/members/MemberCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
+import { useFavoriteMembers } from '@/hooks/useFavoriteMembers';
 import { useMembersDirectory } from '@/hooks/useMembersDirectory';
 import {
   getMemberMeta,
@@ -25,9 +27,16 @@ type TransitionDocument = Document & {
 type MemberArea = Exclude<(typeof MEMBER_AREAS)[number], '全部'>;
 
 export function MembersPage() {
+  const { user } = useAuth();
   const [activeAreas, setActiveAreas] = useState<MemberArea[]>([]);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
   const { data: members = [], isLoading, error } = useMembersDirectory();
+  const {
+    favoriteSet,
+    isLoading: favoritesLoading,
+    pendingId,
+    toggleFavorite,
+  } = useFavoriteMembers(user?.$id);
 
   const changeViewMode = (nextMode: 'cards' | 'compact') => {
     if (nextMode === viewMode) return;
@@ -196,6 +205,9 @@ export function MembersPage() {
                 projects={projects}
                 meta={getMemberMeta(profile.$id)}
                 compact={viewMode === 'compact'}
+                favorite={favoriteSet.has(profile.$id)}
+                favoritePending={favoritesLoading || pendingId !== null}
+                onFavoriteToggle={() => void toggleFavorite(profile.$id)}
               />
             ))}
           </div>

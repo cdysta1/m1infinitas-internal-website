@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { Heart } from 'lucide-react';
 import { SmartImage } from '@/components/common/SmartImage';
 import { getAvatarUrl } from '@/lib/media';
 import type { MemberMeta } from '@/lib/memberDirectory';
@@ -11,9 +12,21 @@ interface MemberCardProps {
   projects: Project[];
   meta: MemberMeta;
   compact?: boolean;
+  favorite?: boolean;
+  favoritePending?: boolean;
+  onFavoriteToggle?: () => void;
 }
 
-export function MemberCard({ index, profile, projects, meta, compact = false }: MemberCardProps) {
+export function MemberCard({
+  index,
+  profile,
+  projects,
+  meta,
+  compact = false,
+  favorite = false,
+  favoritePending = false,
+  onFavoriteToggle,
+}: MemberCardProps) {
   const avatarUrl = getAvatarUrl(profile.avatar_file_id, profile.$id);
   const transitionStyle = {
     viewTransitionName: `member-card-${profile.$id}`,
@@ -46,6 +59,12 @@ export function MemberCard({ index, profile, projects, meta, compact = false }: 
             ))}
           </div>
         </div>
+        <FavoriteButton
+          name={profile.name}
+          favorite={favorite}
+          pending={favoritePending}
+          onToggle={onFavoriteToggle}
+        />
       </article>
     );
   }
@@ -60,10 +79,18 @@ export function MemberCard({ index, profile, projects, meta, compact = false }: 
         <span className="rounded-full bg-foreground px-2.5 py-1 text-[10px] font-medium text-background">
           {meta.areas[0]}
         </span>
-        <span className="flex items-center overflow-hidden rounded-full border font-mono text-[9px] text-muted-foreground">
-          <span className="border-r px-2 py-1">M1</span>
-          <span className="bg-muted px-2 py-1">{String(projects.length).padStart(2, '0')} PROJECTS</span>
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center overflow-hidden rounded-full border font-mono text-[9px] text-muted-foreground">
+            <span className="border-r px-2 py-1">M1</span>
+            <span className="bg-muted px-2 py-1">{String(projects.length).padStart(2, '0')} PROJECTS</span>
+          </span>
+          <FavoriteButton
+            name={profile.name}
+            favorite={favorite}
+            pending={favoritePending}
+            onToggle={onFavoriteToggle}
+          />
+        </div>
       </div>
 
       <div className="mt-5">
@@ -107,5 +134,36 @@ export function MemberCard({ index, profile, projects, meta, compact = false }: 
         </div>
       </div>
     </article>
+  );
+}
+
+interface FavoriteButtonProps {
+  name: string;
+  favorite: boolean;
+  pending: boolean;
+  onToggle?: () => void;
+}
+
+function FavoriteButton({ name, favorite, pending, onToggle }: FavoriteButtonProps) {
+  if (!onToggle) return null;
+
+  const label = favorite ? `取消收藏 ${name}` : `收藏 ${name}`;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={pending}
+      aria-label={label}
+      title={label}
+      aria-pressed={favorite}
+      className={cn(
+        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-[color,background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90 disabled:cursor-wait disabled:opacity-50',
+        favorite
+          ? 'border-foreground bg-foreground text-background'
+          : 'bg-background text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <Heart className={cn('h-4 w-4', favorite && 'fill-current')} />
+    </button>
   );
 }

@@ -1,20 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Camera, LogOut } from 'lucide-react';
+import { Loader2, Camera, Heart, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { SmartImage } from '@/components/common/SmartImage';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useFavoriteMembers } from '@/hooks/useFavoriteMembers';
+import { useMembersDirectory } from '@/hooks/useMembersDirectory';
 import { updateProfile } from '@/services/profiles';
 import { uploadMedia } from '@/services/storage';
 import { getAvatarUrl } from '@/lib/media';
+import { getMemberMeta } from '@/lib/memberDirectory';
+import { cn } from '@/lib/utils';
 
 export function MePage() {
   const { user, profile, refreshProfile, logout } = useAuth();
   const navigate = useNavigate();
+  const { data: members = [], isLoading: membersLoading } = useMembersDirectory();
+  const {
+    favoriteIds,
+    isLoading: favoritesLoading,
+    pendingId,
+    toggleFavorite,
+  } = useFavoriteMembers(user?.$id);
 
   const [name, setName] = useState(profile?.name ?? '');
   const [wechat, setWechat] = useState(profile?.wechat ?? '');
@@ -28,6 +40,15 @@ export function MePage() {
     setName(profile.name ?? '');
     setWechat(profile.wechat ?? '');
   }, [profile]);
+
+  const favoriteMembers = useMemo(
+    () =>
+      favoriteIds.flatMap((memberId) => {
+        const member = members.find(({ profile: memberProfile }) => memberProfile.$id === memberId);
+        return member ? [member] : [];
+      }),
+    [favoriteIds, members],
+  );
 
   if (!user) {
     return (
@@ -159,6 +180,69 @@ export function MePage() {
             )}
           </Button>
         </form>
+
+        <section className="mt-10 border-t pt-6" aria-labelledby="favorite-members-heading">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 id="favorite-members-heading" className="text-base font-semibold">
+              收藏成员
+            </h2>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {String(favoriteMembers.length).padStart(2, '0')} PEOPLE
+            </span>
+          </div>
+
+          {membersLoading || favoritesLoading ? (
+            <div className="flex items-center justify-center py-10 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="sr-only">正在加载收藏成员</span>
+            </div>
+          ) : favoriteMembers.length === 0 ? (
+            <div className="mt-4 rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+              还没有收藏成员
+            </div>
+          ) : (
+            <div className="mt-3 divide-y border-y">
+              {favoriteMembers.map(({ profile: memberProfile }) => {
+                const meta = getMemberMeta(memberProfile.$id);
+                return (
+                  <article key={memberProfile.$id} className="flex items-center gap-3 py-3">
+                    <SmartImage
+                      src={getAvatarUrl(memberProfile.avatar_file_id, memberProfile.$id)}
+                      alt={memberProfile.name}
+                      wrapperClassName="h-14 w-14 shrink-0 rounded-sm"
+                      imgClassName="object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-semibold">{memberProfile.name}</h3>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta.focus}</p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {meta.tags.slice(0, 2).map((tag) => (
+                          <span key={tag} className="rounded-full bg-muted px-2 py-1 text-[10px] leading-none">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void toggleFavorite(memberProfile.$id)}
+                      disabled={pendingId !== null}
+                      aria-label={`取消收藏 ${memberProfile.name}`}
+                      title={`取消收藏 ${memberProfile.name}`}
+                      aria-pressed="true"
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground bg-foreground text-background transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90',
+                        pendingId !== null && 'cursor-wait opacity-50',
+                      )}
+                    >
+                      <Heart className="h-4 w-4 fill-current" />
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         <div className="mt-8 border-t pt-6">
           <Button
