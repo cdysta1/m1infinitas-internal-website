@@ -2,11 +2,11 @@ import type { Models } from 'appwrite';
 import { PAGE_SIZE, PROJECT_STATUS, TIMELINE_PAGE_SIZE, type ProjectStatus } from '@/lib/constants';
 import type { Profile, Project, UpdateItem } from '@/types/models';
 
-const STORAGE_KEY = 'm1-infinitas-demo-v7';
+const STORAGE_KEY = 'm1-infinitas-demo-v8';
 export const DEMO_USER_ID = 'demo-user-lin';
 
 interface DemoState {
-  version: 7;
+  version: 8;
   profiles: Profile[];
   projects: Project[];
   updates: UpdateItem[];
@@ -15,6 +15,33 @@ interface DemoState {
 const projectListeners = new Set<() => void>();
 const updateListeners = new Set<(update: UpdateItem) => void>();
 let memoryState: DemoState | null = null;
+
+const DEFAULT_USER_NAMES = [
+  'Lucian',
+  'Elias',
+  'AdrianOphelia',
+  'Sylvia',
+  'Iris',
+  'Elodie',
+] as const;
+
+const DEMO_USER_NAME_INDEX: Record<string, number> = {
+  'demo-user-lin': 0,
+  'demo-user-yu': 1,
+  'demo-user-su': 2,
+  'demo-user-he': 3,
+};
+
+function getDefaultUserName(userId: string): string {
+  const assigned = DEMO_USER_NAME_INDEX[userId];
+  if (assigned !== undefined) return DEFAULT_USER_NAMES[assigned];
+
+  let hash = 0;
+  for (let i = 0; i < userId.length; i += 1) {
+    hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  }
+  return DEFAULT_USER_NAMES[hash % DEFAULT_USER_NAMES.length];
+}
 
 const demoCover = (fileName: string) =>
   new URL(`${import.meta.env.BASE_URL}demo/covers/${fileName}`, window.location.origin).href;
@@ -57,12 +84,12 @@ export const demoUser = {
   $id: DEMO_USER_ID,
   $createdAt: new Date().toISOString(),
   $updatedAt: new Date().toISOString(),
-  name: '林澈',
+  name: getDefaultUserName(DEMO_USER_ID),
   registration: new Date().toISOString(),
   status: true,
   labels: [],
   passwordUpdate: new Date().toISOString(),
-  email: 'lin@m1.demo',
+  email: 'lucian@m1.demo',
   phone: '',
   emailVerification: true,
   phoneVerification: false,
@@ -89,10 +116,10 @@ function metadata(id: string, collection: string, createdAt: string) {
 
 function createSeedState(): DemoState {
   const profiles: Profile[] = [
-    { ...metadata(DEMO_USER_ID, 'profiles', iso(720)), name: '林澈', wechat: 'linche_studio', avatar_file_id: '' },
-    { ...metadata('demo-user-yu', 'profiles', iso(680)), name: '余望', wechat: 'yu_wang_art', avatar_file_id: '' },
-    { ...metadata('demo-user-su', 'profiles', iso(640)), name: '苏珂', wechat: 'suke_space', avatar_file_id: '' },
-    { ...metadata('demo-user-he', 'profiles', iso(600)), name: '何野', wechat: 'heye_field', avatar_file_id: '' },
+    { ...metadata(DEMO_USER_ID, 'profiles', iso(720)), name: getDefaultUserName(DEMO_USER_ID), wechat: 'lucian_studio', avatar_file_id: '' },
+    { ...metadata('demo-user-yu', 'profiles', iso(680)), name: getDefaultUserName('demo-user-yu'), wechat: 'elias_art', avatar_file_id: '' },
+    { ...metadata('demo-user-su', 'profiles', iso(640)), name: getDefaultUserName('demo-user-su'), wechat: 'adrianophelia_space', avatar_file_id: '' },
+    { ...metadata('demo-user-he', 'profiles', iso(600)), name: getDefaultUserName('demo-user-he'), wechat: 'sylvia_field', avatar_file_id: '' },
   ];
 
   const projects: Project[] = [
@@ -378,7 +405,7 @@ function createSeedState(): DemoState {
     },
   ];
 
-  return { version: 7, profiles, projects, updates };
+  return { version: 8, profiles, projects, updates };
 }
 
 function getState(): DemoState {
@@ -387,7 +414,7 @@ function getState(): DemoState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as DemoState;
-      if (parsed.version === 7) {
+      if (parsed.version === 8) {
         memoryState = parsed;
         return memoryState;
       }
@@ -420,7 +447,7 @@ export async function demoCreateProfile(userId: string, data: { name: string; we
   const now = new Date().toISOString();
   const profile: Profile = {
     ...metadata(userId, 'profiles', now),
-    name: data.name,
+    name: data.name.trim() || getDefaultUserName(userId),
     wechat: data.wechat,
     avatar_file_id: data.avatar_file_id ?? '',
   };
