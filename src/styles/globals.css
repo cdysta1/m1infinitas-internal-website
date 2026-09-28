@@ -79,6 +79,89 @@
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.35);
   }
+
+  html.member-layout-transition::view-transition-old(root),
+  html.member-layout-transition::view-transition-new(root) {
+    animation: none;
+  }
+
+  html.member-search-transition::view-transition-old(root),
+  html.member-search-transition::view-transition-new(root) {
+    animation: none;
+  }
+
+  html.member-layout-transition::view-transition-group(*) {
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html.member-search-transition::view-transition-group(*) {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html.member-search-transition::view-transition-old(*),
+  html.member-search-transition::view-transition-new(*) {
+    animation-duration: 220ms;
+    animation-timing-function: ease-out;
+  }
+
+  html.search-route-transition::view-transition-old(root) {
+    animation: 180ms ease-in both search-route-out;
+  }
+
+  html.search-route-transition::view-transition-new(root) {
+    animation: 280ms cubic-bezier(0.22, 1, 0.36, 1) both search-route-in;
+  }
+
+  .search-page-enter {
+    animation: 320ms cubic-bezier(0.22, 1, 0.36, 1) both search-page-enter;
+  }
+
+  @keyframes search-page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes search-route-out {
+    to {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  @keyframes search-route-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  html.member-layout-transition::view-transition-old(*),
+  html.member-layout-transition::view-transition-new(*) {
+    animation-duration: 260ms;
+    animation-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.member-layout-transition::view-transition-group(*),
+    html.member-layout-transition::view-transition-old(*),
+    html.member-layout-transition::view-transition-new(*),
+    html.member-search-transition::view-transition-group(*),
+    html.member-search-transition::view-transition-old(*),
+    html.member-search-transition::view-transition-new(*),
+    html.search-route-transition::view-transition-old(root),
+    html.search-route-transition::view-transition-new(root),
+    .search-page-enter {
+      animation-duration: 0.01ms;
+    }
+  }
 }
 
 @layer utilities {

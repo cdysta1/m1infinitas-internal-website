@@ -5,6 +5,7 @@ import { uploadMany } from '@/services/storage';
 import { useAuth } from './useAuth';
 import { timelineKey, type TimelinePage } from './useUpdatesTimeline';
 import { projectsFeedKey } from './useProjectsFeed';
+import { latestProjectUpdateKey } from './useLatestProjectUpdate';
 import { OPTIMISTIC } from '@/lib/constants';
 import { tempId } from '@/lib/utils';
 import type { Profile, TimelineEntry, UpdateItem } from '@/types/models';
@@ -107,6 +108,7 @@ export function useCreateUpdate() {
         status: OPTIMISTIC.SENT,
       };
       replaceEntryInCache(qc, ctx.projectId, ctx.tempEntryId, serverEntry);
+      qc.setQueryData(latestProjectUpdateKey(ctx.projectId), doc);
       qc.invalidateQueries({ queryKey: projectsFeedKey });
     },
     onError: (_err, _vars, ctx) => {

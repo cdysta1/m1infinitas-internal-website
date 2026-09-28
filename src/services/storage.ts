@@ -1,6 +1,7 @@
 import { ID, Permission, Role } from 'appwrite';
 import { BUCKET_ID, storage } from '@/lib/appwrite';
 import { compressImage } from '@/lib/media';
+import { env } from '@/lib/env';
 
 export interface UploadResult {
   fileId: string;
@@ -34,6 +35,16 @@ export async function uploadMedia(
 ): Promise<UploadResult> {
   const compressed = await compressImage(file);
   const name = buildFileName(userId, compressed);
+  if (env.demoMode) {
+    const fileId = await fileToDataUrl(compressed);
+    onProgress?.(100);
+    return {
+      fileId,
+      fileName: name,
+      mimeType: compressed.type,
+      size: compressed.size,
+    };
+  }
   // Re-wrap so Appwrite stores the file under our prefixed name instead of the original.
   const payload = new File([compressed], name, { type: compressed.type });
   const created = await storage.createFile(
@@ -83,9 +94,19 @@ export async function uploadMany(
 }
 
 export async function deleteMedia(fileId: string): Promise<void> {
+  if (env.demoMode) return;
   try {
     await storage.deleteFile(BUCKET_ID, fileId);
   } catch (err) {
     console.warn('[storage] delete failed', err);
   }
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error('无法读取演示图片'));
+    reader.readAsDataURL(file);
+  });
 }

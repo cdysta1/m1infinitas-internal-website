@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
+import { DirectoryTabs } from '@/components/layout/DirectoryTabs';
 import { MasonryGrid, MasonrySkeleton } from '@/components/gallery/MasonryGrid';
 import { ProjectCard } from '@/components/gallery/ProjectCard';
 import { CreateProjectDrawer } from '@/components/compose/CreateProjectDrawer';
@@ -40,7 +41,8 @@ export function GalleryPage() {
   }, [sentinel, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <AppShell onCreateClick={() => setCreateOpen(true)}>
+    <AppShell showCreate={false}>
+      <DirectoryTabs onCreateClick={() => setCreateOpen(true)} />
       <div className="mx-auto max-w-6xl px-3 py-4 sm:px-4">
         {isLoading ? (
           <MasonrySkeleton count={8} />

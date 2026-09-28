@@ -12,7 +12,8 @@ const required = [
   'VITE_APPWRITE_DATABASE_ID',
   'VITE_APPWRITE_BUCKET_ID',
 ];
-const missing = required.filter((k) => !import.meta.env[k]);
+const demoMode = import.meta.env.DEV && import.meta.env.VITE_DEMO_MODE === 'true';
+const missing = demoMode ? [] : required.filter((k) => !import.meta.env[k]);
 
 function renderFatal(message: string) {
   const root = document.getElementById('root');

@@ -10,6 +10,7 @@ import {
 import type { Models } from 'appwrite';
 import { getCurrentUser, login as loginService, logout as logoutService, register as registerService, type RegisterInput } from '@/services/auth';
 import { getProfile } from '@/services/profiles';
+import { env } from '@/lib/env';
 import type { Profile } from '@/types/models';
 
 interface AuthState {
@@ -67,6 +68,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [loadProfile]);
 
+  // Demo preview always has a local identity. Recover automatically if a hot
+  // reload or an earlier logout left the provider unauthenticated.
+  useEffect(() => {
+    if (!env.demoMode || status !== 'unauthenticated') return;
+    let cancelled = false;
+    void (async () => {
+      const u = await getCurrentUser();
+      if (cancelled || !u) return;
+      setUser(u);
+      setStatus('authenticated');
+      await loadProfile(u);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadProfile, status]);
+
   const login = useCallback(
     async (email: string, password: string) => {
       const u = await loginService(email, password);
@@ -88,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    if (env.demoMode) return;
     await logoutService();
     setUser(null);
     setProfile(null);

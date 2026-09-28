@@ -2,6 +2,15 @@ import { ID, Permission, Query, Role } from 'appwrite';
 import { COLLECTIONS, DATABASE_ID, databases, realtime } from '@/lib/appwrite';
 import { PAGE_SIZE, PROJECT_STATUS, type ProjectStatus } from '@/lib/constants';
 import type { Project } from '@/types/models';
+import { env } from '@/lib/env';
+import {
+  demoCreateProject,
+  demoGetProject,
+  demoListProjects,
+  demoSubscribeProjects,
+  demoTouchProject,
+  demoUpdateProjectStatus,
+} from '@/demo/store';
 
 export interface CreateProjectInput {
   title: string;
@@ -22,6 +31,7 @@ export async function listProjects(opts: {
   limit?: number;
   cursor?: string;
 } = {}): Promise<ListProjectsResult> {
+  if (env.demoMode) return demoListProjects(opts);
   const limit = opts.limit ?? PAGE_SIZE;
   const queries: string[] = [
     Query.orderDesc('updated_at'),
@@ -44,10 +54,12 @@ export async function listProjects(opts: {
 }
 
 export async function getProject(id: string): Promise<Project> {
+  if (env.demoMode) return demoGetProject(id);
   return databases.getDocument<Project>(DATABASE_ID, COLLECTIONS.projects, id);
 }
 
 export async function createProject(input: CreateProjectInput): Promise<Project> {
+  if (env.demoMode) return demoCreateProject(input);
   const now = new Date().toISOString();
   return databases.createDocument<Project>(
     DATABASE_ID,
@@ -72,6 +84,7 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
 // Bump updated_at; called after a new update is appended so the gallery reorders.
 // Only the project owner has write permission; other callers should skip.
 export async function touchProject(id: string): Promise<Project | null> {
+  if (env.demoMode) return demoTouchProject(id);
   try {
     return await databases.updateDocument<Project>(
       DATABASE_ID,
@@ -89,6 +102,7 @@ export async function updateProjectStatus(
   id: string,
   status: ProjectStatus,
 ): Promise<Project> {
+  if (env.demoMode) return demoUpdateProjectStatus(id, status);
   return databases.updateDocument<Project>(DATABASE_ID, COLLECTIONS.projects, id, {
     status,
     updated_at: new Date().toISOString(),
@@ -98,6 +112,7 @@ export async function updateProjectStatus(
 // Realtime subscription on the projects collection. Used to re-sort the
 // gallery when someone else creates a project or bumps updated_at.
 export function subscribeProjects(onEvent: () => void): () => void {
+  if (env.demoMode) return demoSubscribeProjects(onEvent);
   const channel = `databases.${DATABASE_ID}.collections.${COLLECTIONS.projects}.documents`;
   return realtime.subscribe([channel], () => onEvent());
 }

@@ -4,6 +4,7 @@ import { listProjects, subscribeProjects } from '@/services/projects';
 import { getProfilesByIds } from '@/services/profiles';
 import type { Profile, Project } from '@/types/models';
 import { PAGE_SIZE, PROJECT_STATUS } from '@/lib/constants';
+import { latestProjectUpdatesKey } from './useLatestProjectUpdate';
 
 export interface FeedPage {
   projects: Project[];
@@ -82,6 +83,7 @@ export function useProjectsRealtime() {
   useEffect(() => {
     const unsub = subscribeProjects(() => {
       qc.invalidateQueries({ queryKey: projectsFeedKey });
+      qc.invalidateQueries({ queryKey: latestProjectUpdatesKey });
     });
     return unsub;
   }, [qc]);
