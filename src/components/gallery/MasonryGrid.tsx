@@ -6,14 +6,13 @@ interface MasonryGridProps {
   className?: string;
 }
 
-// CSS-columns based masonry. Simple, no JS measurement, works well for
-// internal scale (a few dozen to a few hundred projects).
-// Cards inside must have `break-inside-avoid` (see ProjectCard).
+// Stable portrait grid keeps image-overlay labels and actions aligned across
+// cards while still scaling from compact mobile columns to desktop.
 export function MasonryGrid({ children, className }: MasonryGridProps) {
   return (
     <div
       className={cn(
-        'columns-2 gap-3 sm:columns-2 md:columns-3 lg:columns-4 md:gap-4',
+        'grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4 lg:grid-cols-4',
         className,
       )}
     >
@@ -29,8 +28,7 @@ export function MasonrySkeleton({ count = 8 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="mb-4 break-inside-avoid overflow-hidden rounded-xl"
-          style={{ aspectRatio: i % 3 === 0 ? '3/4' : i % 3 === 1 ? '1/1' : '4/5' }}
+          className="aspect-[3/4] overflow-hidden rounded-2xl"
         >
           <div className="h-full w-full animate-pulse bg-muted/70" />
         </div>
