@@ -2,11 +2,11 @@ import type { Models } from 'appwrite';
 import { PAGE_SIZE, PROJECT_STATUS, TIMELINE_PAGE_SIZE, type ProjectStatus } from '@/lib/constants';
 import type { Profile, Project, UpdateItem } from '@/types/models';
 
-const STORAGE_KEY = 'm1-infinitas-demo-v1';
+const STORAGE_KEY = 'm1-infinitas-demo-v4';
 export const DEMO_USER_ID = 'demo-user-lin';
 
 interface DemoState {
-  version: 1;
+  version: 4;
   profiles: Profile[];
   projects: Project[];
   updates: UpdateItem[];
@@ -24,6 +24,18 @@ const images = {
   field: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85',
   stage: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1200&q=85',
   tools: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=1200&q=85',
+} as const;
+
+const demoCover = (fileName: string) =>
+  new URL(`${import.meta.env.BASE_URL}demo/covers/${fileName}`, window.location.origin).href;
+
+const covers = {
+  portrait: demoCover('green-portrait.png'),
+  between: demoCover('between-poster.png'),
+  thinking: demoCover('thinking-spring.png'),
+  nurture: demoCover('nurture-poster-a.png'),
+  culturehub: demoCover('culturehub-residency.png'),
+  voronoi: demoCover('voronoi-poster.png'),
 } as const;
 
 export const demoUser = {
@@ -73,7 +85,7 @@ function createSeedState(): DemoState {
       ...metadata('demo-project-light', 'projects', iso(96)),
       title: '光线采样计划',
       summary: '记录一天中不同时间落在旧厂房里的光，准备转化成一组装置。',
-      cover_file_id: images.studio,
+      cover_file_id: covers.portrait,
       owner_id: DEMO_USER_ID,
       status: PROJECT_STATUS.ACTIVE,
       updated_at: iso(2),
@@ -82,7 +94,7 @@ function createSeedState(): DemoState {
       ...metadata('demo-project-paper', 'projects', iso(180)),
       title: '纸上城市：第二阶段',
       summary: '把成员收集的城市边角料做成可展开的手工书。',
-      cover_file_id: images.paper,
+      cover_file_id: covers.between,
       owner_id: 'demo-user-yu',
       status: PROJECT_STATUS.ACTIVE,
       updated_at: iso(7),
@@ -91,7 +103,7 @@ function createSeedState(): DemoState {
       ...metadata('demo-project-room', 'projects', iso(260)),
       title: '临时房间 No. 3',
       summary: '为十月开放日搭建一个能被声音改变的共享空间。',
-      cover_file_id: images.space,
+      cover_file_id: covers.thinking,
       owner_id: 'demo-user-su',
       status: PROJECT_STATUS.ACTIVE,
       updated_at: iso(22),
@@ -100,7 +112,7 @@ function createSeedState(): DemoState {
       ...metadata('demo-project-color', 'projects', iso(320)),
       title: '失焦色谱',
       summary: '继续测试大尺幅色层叠加，寻找更轻的边缘关系。',
-      cover_file_id: images.paint,
+      cover_file_id: covers.nurture,
       owner_id: DEMO_USER_ID,
       status: PROJECT_STATUS.ACTIVE,
       updated_at: iso(50),
@@ -109,7 +121,7 @@ function createSeedState(): DemoState {
       ...metadata('demo-project-field', 'projects', iso(410)),
       title: '河岸声音地图',
       summary: '沿河记录环境声与居民口述，计划制作步行聆听路线。',
-      cover_file_id: images.field,
+      cover_file_id: covers.culturehub,
       owner_id: 'demo-user-he',
       status: PROJECT_STATUS.ACTIVE,
       updated_at: iso(88),
@@ -118,7 +130,7 @@ function createSeedState(): DemoState {
       ...metadata('demo-project-stage', 'projects', iso(500)),
       title: '身体与回声排练',
       summary: '三位表演者围绕延迟、重复和错位进行的阶段性实验。',
-      cover_file_id: images.stage,
+      cover_file_id: covers.voronoi,
       owner_id: 'demo-user-yu',
       status: PROJECT_STATUS.ACTIVE,
       updated_at: iso(126),
@@ -200,7 +212,7 @@ function createSeedState(): DemoState {
     },
   ];
 
-  return { version: 1, profiles, projects, updates };
+  return { version: 4, profiles, projects, updates };
 }
 
 function getState(): DemoState {
@@ -209,7 +221,7 @@ function getState(): DemoState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as DemoState;
-      if (parsed.version === 1) {
+      if (parsed.version === 4) {
         memoryState = parsed;
         return memoryState;
       }
