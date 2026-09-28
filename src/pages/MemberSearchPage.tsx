@@ -31,7 +31,7 @@ const POPULAR_TAGS = [
 export function MemberSearchPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [projectPage, setProjectPage] = useState(0);
   const { data: members = [], isLoading, error } = useMembersDirectory();
 
@@ -50,7 +50,9 @@ export function MemberSearchPage() {
     const search = query.trim().toLocaleLowerCase();
     return orderedMembers.filter(({ profile }) => {
       const meta = getMemberMeta(profile.$id);
-      const matchesTag = !selectedTag || meta.tags.includes(selectedTag);
+      const matchesTag =
+        selectedTags.length === 0 ||
+        selectedTags.some((tag) => meta.tags.includes(tag));
       if (!matchesTag) return false;
       if (!search) return true;
 
@@ -63,9 +65,9 @@ export function MemberSearchPage() {
         ...meta.areas,
       ].some((value) => value.toLocaleLowerCase().includes(search));
     });
-  }, [orderedMembers, query, selectedTag]);
+  }, [orderedMembers, query, selectedTags]);
 
-  const hasFilter = Boolean(query.trim() || selectedTag);
+  const hasFilter = Boolean(query.trim() || selectedTags.length > 0);
 
   return (
     <AppShell showCreate={false}>
@@ -89,10 +91,7 @@ export function MemberSearchPage() {
           <input
             type="search"
             value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setSelectedTag(null);
-            }}
+            onChange={(event) => setQuery(event.target.value)}
             placeholder="搜索姓名、方向或专长"
             className="h-12 w-full rounded-full border-0 bg-muted pl-12 pr-12 text-base outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
           />
@@ -122,16 +121,19 @@ export function MemberSearchPage() {
           </h1>
           <div className="mt-3 flex flex-wrap gap-2">
             {POPULAR_TAGS.map((tag) => {
-              const active = tag === selectedTag;
+              const active = selectedTags.includes(tag);
               return (
                 <button
                   key={tag}
                   type="button"
                   aria-pressed={active}
-                  onClick={() => {
-                    setQuery('');
-                    setSelectedTag(active ? null : tag);
-                  }}
+                  onClick={() =>
+                    setSelectedTags((current) =>
+                      current.includes(tag)
+                        ? current.filter((item) => item !== tag)
+                        : [...current, tag],
+                    )
+                  }
                   className={cn(
                     'h-9 rounded-full border px-3.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     active

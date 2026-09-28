@@ -22,8 +22,10 @@ type TransitionDocument = Document & {
   startViewTransition?: (update: () => void) => MemberViewTransition;
 };
 
+type MemberArea = Exclude<(typeof MEMBER_AREAS)[number], '全部'>;
+
 export function MembersPage() {
-  const [activeArea, setActiveArea] = useState<(typeof MEMBER_AREAS)[number]>('全部');
+  const [activeAreas, setActiveAreas] = useState<MemberArea[]>([]);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
   const { data: members = [], isLoading, error } = useMembersDirectory();
 
@@ -54,8 +56,9 @@ export function MembersPage() {
   const visibleMembers = useMemo(() => {
     return members
       .filter(({ profile }) => {
-        if (activeArea === '全部') return true;
-        return getMemberMeta(profile.$id).areas.includes(activeArea);
+        if (activeAreas.length === 0) return true;
+        const memberAreas = getMemberMeta(profile.$id).areas;
+        return activeAreas.some((area) => memberAreas.includes(area));
       })
       .sort((a, b) => {
         const aIndex = MEMBER_NAME_ORDER.indexOf(a.profile.name as (typeof MEMBER_NAME_ORDER)[number]);
@@ -64,7 +67,7 @@ export function MembersPage() {
         const bRank = bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex;
         return aRank - bRank || a.profile.name.localeCompare(b.profile.name);
       });
-  }, [activeArea, members]);
+  }, [activeAreas, members]);
 
   return (
     <AppShell showCreate={false}>
@@ -133,12 +136,25 @@ export function MembersPage() {
 
         <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 py-5" aria-label="按学科筛选">
           {MEMBER_AREAS.map((area) => {
-            const active = area === activeArea;
+            const isAll = area === '全部';
+            const active = isAll
+              ? activeAreas.length === 0
+              : activeAreas.includes(area);
             return (
               <button
                 key={area}
                 type="button"
-                onClick={() => setActiveArea(area)}
+                onClick={() => {
+                  if (isAll) {
+                    setActiveAreas([]);
+                    return;
+                  }
+                  setActiveAreas((current) =>
+                    current.includes(area)
+                      ? current.filter((item) => item !== area)
+                      : [...current, area],
+                  );
+                }}
                 aria-pressed={active}
                 className={cn(
                   'h-8 shrink-0 rounded-full border px-3 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
