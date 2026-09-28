@@ -2,11 +2,11 @@ import type { Models } from 'appwrite';
 import { PAGE_SIZE, PROJECT_STATUS, TIMELINE_PAGE_SIZE, type ProjectStatus } from '@/lib/constants';
 import type { Profile, Project, UpdateItem } from '@/types/models';
 
-const STORAGE_KEY = 'm1-infinitas-demo-v6';
+const STORAGE_KEY = 'm1-infinitas-demo-v7';
 export const DEMO_USER_ID = 'demo-user-lin';
 
 interface DemoState {
-  version: 6;
+  version: 7;
   profiles: Profile[];
   projects: Project[];
   updates: UpdateItem[];
@@ -21,6 +21,9 @@ const demoCover = (fileName: string) =>
 
 const demoProcess = (fileName: string) =>
   new URL(`${import.meta.env.BASE_URL}demo/process/${fileName}`, window.location.origin).href;
+
+const demoInterlude = (fileName: string) =>
+  new URL(`${import.meta.env.BASE_URL}demo/interludes/${fileName}`, window.location.origin).href;
 
 const covers = {
   portrait: demoCover('green-portrait-bw.png'),
@@ -38,6 +41,16 @@ const processImages = {
   nurture: demoProcess('nurture-process.png'),
   culturehub: demoProcess('residency-process.png'),
   voronoi: demoProcess('voronoi-process.png'),
+} as const;
+
+const interludeCovers = {
+  displaced: demoInterlude('sufra-displaced-objects.png'),
+  lavra: demoInterlude('lavra-poster.png'),
+  cyborg: demoInterlude('cyborg-system.png'),
+  pixelHabitat: demoInterlude('pixel-roof.png'),
+  organicType: demoInterlude('organic-letterforms.png'),
+  futureSculpture: demoInterlude('future-sculpture.png'),
+  shigeto: demoInterlude('shigeto-poster.png'),
 } as const;
 
 export const demoUser = {
@@ -136,6 +149,69 @@ function createSeedState(): DemoState {
       owner_id: 'demo-user-yu',
       status: PROJECT_STATUS.ACTIVE,
       updated_at: iso(126),
+    },
+    {
+      ...metadata('demo-project-displaced', 'projects', iso(110)),
+      title: 'Displaced Objects｜移位物件',
+      summary: '围绕迁徙、饮食记忆与物件位移，为跨地域展览建立主视觉与叙事线索。',
+      cover_file_id: interludeCovers.displaced,
+      owner_id: 'demo-user-yu',
+      status: PROJECT_STATUS.ACTIVE,
+      updated_at: iso(4),
+    },
+    {
+      ...metadata('demo-project-lavra', 'projects', iso(190)),
+      title: 'LAVRA｜接触与身体档案',
+      summary: '以身体剪影、打字文本与轨迹节点组织一组关于接触和共同体的视觉档案。',
+      cover_file_id: interludeCovers.lavra,
+      owner_id: 'demo-user-su',
+      status: PROJECT_STATUS.ACTIVE,
+      updated_at: iso(12),
+    },
+    {
+      ...metadata('demo-project-cyborg', 'projects', iso(240)),
+      title: 'Cyborg System｜赛博形态研究',
+      summary: '通过镜像扫描、流体边缘与机械结构，测试身体和数字系统之间的混合形态。',
+      cover_file_id: interludeCovers.cyborg,
+      owner_id: 'demo-user-he',
+      status: PROJECT_STATUS.ACTIVE,
+      updated_at: iso(32),
+    },
+    {
+      ...metadata('demo-project-pixel-habitat', 'projects', iso(350)),
+      title: 'Pixel Habitat｜像素栖居',
+      summary: '将住宅立面与像素纹样叠合，观察装饰、建筑边界和数字图案的相互侵入。',
+      cover_file_id: interludeCovers.pixelHabitat,
+      owner_id: DEMO_USER_ID,
+      status: PROJECT_STATUS.ACTIVE,
+      updated_at: iso(66),
+    },
+    {
+      ...metadata('demo-project-organic-type', 'projects', iso(430)),
+      title: 'Saturated / Unsure｜有机字形实验',
+      summary: '从液态膜、孔洞和拉伸结构出发，发展一组介于字形与生物组织之间的图像。',
+      cover_file_id: interludeCovers.organicType,
+      owner_id: 'demo-user-su',
+      status: PROJECT_STATUS.ACTIVE,
+      updated_at: iso(98),
+    },
+    {
+      ...metadata('demo-project-future-sculpture', 'projects', iso(520)),
+      title: 'Future is the Sculpture｜视觉研究',
+      summary: '以光场、圆弧和时间轴构成视觉研究系列，讨论材料如何在过去与未来之间转换。',
+      cover_file_id: interludeCovers.futureSculpture,
+      owner_id: 'demo-user-he',
+      status: PROJECT_STATUS.ACTIVE,
+      updated_at: iso(142),
+    },
+    {
+      ...metadata('demo-project-shigeto', 'projects', iso(610)),
+      title: 'SHIGETO｜演出视觉',
+      summary: '为现场演出建立由噪点曲面、留白与信息层级组成的海报和延展视觉。',
+      cover_file_id: interludeCovers.shigeto,
+      owner_id: 'demo-user-yu',
+      status: PROJECT_STATUS.ACTIVE,
+      updated_at: iso(168),
     },
   ];
 
@@ -244,9 +320,65 @@ function createSeedState(): DemoState {
       file_ids: [processImages.voronoi],
       created_at: iso(196),
     },
+    {
+      ...metadata('demo-update-displaced-1', 'updates', iso(4)),
+      project_id: 'demo-project-displaced',
+      content: '主海报版式已经确定。放大的物件扫描与多语种信息保持冲突感，让“移位”直接发生在阅读顺序里。',
+      author_id: 'demo-user-yu',
+      file_ids: [interludeCovers.displaced],
+      created_at: iso(4),
+    },
+    {
+      ...metadata('demo-update-lavra-1', 'updates', iso(12)),
+      project_id: 'demo-project-lavra',
+      content: '完成身体剪影与字形的第一轮叠印，保留复印颗粒和节点标记，继续测试信息层级。',
+      author_id: 'demo-user-su',
+      file_ids: [interludeCovers.lavra],
+      created_at: iso(12),
+    },
+    {
+      ...metadata('demo-update-cyborg-1', 'updates', iso(32)),
+      project_id: 'demo-project-cyborg',
+      content: '完成第一轮镜像扫描实验。中心结构已经稳定，下一步会继续减少边缘噪声并测试动态版本。',
+      author_id: 'demo-user-he',
+      file_ids: [interludeCovers.cyborg],
+      created_at: iso(32),
+    },
+    {
+      ...metadata('demo-update-pixel-habitat-1', 'updates', iso(66)),
+      project_id: 'demo-project-pixel-habitat',
+      content: '把屋顶平面抽离成蓝色路径，再用红色像素纹样建立新的方向系统，建筑结构仍保持可辨认。',
+      author_id: DEMO_USER_ID,
+      file_ids: [interludeCovers.pixelHabitat],
+      created_at: iso(66),
+    },
+    {
+      ...metadata('demo-update-organic-type-1', 'updates', iso(98)),
+      project_id: 'demo-project-organic-type',
+      content: '完成第一组有机字形。孔洞、薄膜和拉伸节点已经形成统一语言，正在整理可重复使用的结构规则。',
+      author_id: 'demo-user-su',
+      file_ids: [interludeCovers.organicType],
+      created_at: iso(98),
+    },
+    {
+      ...metadata('demo-update-future-sculpture-1', 'updates', iso(142)),
+      project_id: 'demo-project-future-sculpture',
+      content: '视觉研究推进到 13/30。上下光场与交叉圆弧已经建立过去、现在和未来的阅读关系。',
+      author_id: 'demo-user-he',
+      file_ids: [interludeCovers.futureSculpture],
+      created_at: iso(142),
+    },
+    {
+      ...metadata('demo-update-shigeto-1', 'updates', iso(168)),
+      project_id: 'demo-project-shigeto',
+      content: '演出主视觉完成定稿。噪点曲面保持在信息区上方，底部日期、阵容和场地层级已经统一。',
+      author_id: 'demo-user-yu',
+      file_ids: [interludeCovers.shigeto],
+      created_at: iso(168),
+    },
   ];
 
-  return { version: 6, profiles, projects, updates };
+  return { version: 7, profiles, projects, updates };
 }
 
 function getState(): DemoState {
@@ -255,7 +387,7 @@ function getState(): DemoState {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as DemoState;
-      if (parsed.version === 6) {
+      if (parsed.version === 7) {
         memoryState = parsed;
         return memoryState;
       }

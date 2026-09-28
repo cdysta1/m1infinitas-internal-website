@@ -1,61 +1,12 @@
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { MasonryGrid, MasonrySkeleton } from '@/components/gallery/MasonryGrid';
 import { ProjectCard } from '@/components/gallery/ProjectCard';
-import { VisualInterludeCard } from '@/components/gallery/VisualInterludeCard';
 import { CreateProjectDrawer } from '@/components/compose/CreateProjectDrawer';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useProjectsFeed, useProjectsRealtime } from '@/hooks/useProjectsFeed';
 import { Loader2 } from 'lucide-react';
-
-const interludeImage = (fileName: string) =>
-  new URL(`${import.meta.env.BASE_URL}demo/interludes/${fileName}`, window.location.origin).href;
-
-const visualInterludes = [
-  {
-    afterProject: 0,
-    src: interludeImage('sufra-displaced-objects.png'),
-    alt: 'Sufra Displaced Objects 展览海报',
-    ownerName: '余望',
-  },
-  {
-    afterProject: 1,
-    src: interludeImage('lavra-poster.png'),
-    alt: 'Lavra 实验排版海报',
-    ownerName: '苏珂',
-  },
-  {
-    afterProject: 2,
-    src: interludeImage('cyborg-system.png'),
-    alt: 'Cyborg System 视觉实验海报',
-    ownerName: '何野',
-  },
-  {
-    afterProject: 3,
-    src: interludeImage('pixel-roof.png'),
-    alt: '建筑与像素图形拼贴',
-    ownerName: '林澈',
-  },
-  {
-    afterProject: 4,
-    src: interludeImage('organic-letterforms.png'),
-    alt: '黑色背景上的有机字形实验',
-    ownerName: '苏珂',
-  },
-  {
-    afterProject: 4,
-    src: interludeImage('future-sculpture.png'),
-    alt: 'Future is the sculpture 视觉研究海报',
-    ownerName: '何野',
-  },
-  {
-    afterProject: 5,
-    src: interludeImage('shigeto-poster.png'),
-    alt: 'Shigeto 演出海报',
-    ownerName: '余望',
-  },
-] as const;
 
 export function GalleryPage() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -106,29 +57,16 @@ export function GalleryPage() {
         ) : (
           <>
             <MasonryGrid>
-              {projects.map((p, index) => {
-                const interludes = visualInterludes.filter((item) => item.afterProject === index);
-
-                return (
-                  <Fragment key={p.$id}>
-                    <ProjectCard
-                      project={p}
-                      owner={owners.get(p.owner_id)}
-                      // Optimistic cards have empty cover_file_id until uploads finish.
-                      pending={!p.cover_file_id}
-                      failed={p.summary.startsWith('[发布失败]')}
-                    />
-                    {interludes.map((interlude) => (
-                      <VisualInterludeCard
-                        key={interlude.src}
-                        src={interlude.src}
-                        alt={interlude.alt}
-                        ownerName={interlude.ownerName}
-                      />
-                    ))}
-                  </Fragment>
-                );
-              })}
+              {projects.map((p) => (
+                <ProjectCard
+                  key={p.$id}
+                  project={p}
+                  owner={owners.get(p.owner_id)}
+                  // Optimistic cards have empty cover_file_id until uploads finish.
+                  pending={!p.cover_file_id}
+                  failed={p.summary.startsWith('[发布失败]')}
+                />
+              ))}
             </MasonryGrid>
 
             <div ref={setSentinel} className="h-4" aria-hidden />
