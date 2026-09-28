@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Minus, Plus, Search } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { DirectoryTabs } from '@/components/layout/DirectoryTabs';
 import { MemberCard } from '@/components/members/MemberCard';
@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 
 export function MembersPage() {
   const [activeArea, setActiveArea] = useState<(typeof MEMBER_AREAS)[number]>('全部');
+  const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
   const { data: members = [], isLoading, error } = useMembersDirectory();
 
   const visibleMembers = useMemo(() => {
@@ -50,6 +51,42 @@ export function MembersPage() {
             <div className="font-mono text-xs text-muted-foreground">
               {String(members.length).padStart(2, '0')} MEMBERS
             </div>
+            <div
+              className="flex items-center rounded-full border p-0.5"
+              role="group"
+              aria-label="成员卡片显示方式"
+            >
+              <button
+                type="button"
+                onClick={() => setViewMode('compact')}
+                aria-label="收缩为条状视图"
+                title="收缩为条状视图"
+                aria-pressed={viewMode === 'compact'}
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  viewMode === 'compact'
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('cards')}
+                aria-label="展开为卡片视图"
+                title="展开为卡片视图"
+                aria-pressed={viewMode === 'cards'}
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  viewMode === 'cards'
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
             <Link
               to="/members/search"
               aria-label="搜索成员"
@@ -84,7 +121,7 @@ export function MembersPage() {
         </div>
 
         {isLoading ? (
-          <MembersSkeleton />
+          <MembersSkeleton compact={viewMode === 'compact'} />
         ) : error ? (
           <div className="border-y py-14 text-center text-sm text-muted-foreground">
             成员资料暂时无法加载
@@ -94,7 +131,15 @@ export function MembersPage() {
             这个方向暂时还没有成员
           </div>
         ) : (
-          <div className="grid gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            key={viewMode}
+            className={cn(
+              'grid animate-scale-in motion-reduce:animate-none',
+              viewMode === 'compact'
+                ? 'gap-2 sm:grid-cols-2'
+                : 'gap-5 sm:grid-cols-2 lg:grid-cols-3',
+            )}
+          >
             {visibleMembers.map(({ profile, projects }, index) => (
               <MemberCard
                 key={profile.$id}
@@ -102,6 +147,7 @@ export function MembersPage() {
                 profile={profile}
                 projects={projects}
                 meta={getMemberMeta(profile.$id)}
+                compact={viewMode === 'compact'}
               />
             ))}
           </div>
@@ -111,17 +157,34 @@ export function MembersPage() {
   );
 }
 
-function MembersSkeleton() {
+function MembersSkeleton({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="grid gap-2 sm:grid-cols-2">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="flex h-24 gap-3 rounded-sm border p-2">
+            <Skeleton className="h-20 w-20 shrink-0 rounded-sm" />
+            <div className="flex flex-1 flex-wrap content-center gap-2">
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-5 w-14 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="overflow-hidden rounded-sm border">
-          <Skeleton className="aspect-[4/5] w-full rounded-none" />
-          <div className="space-y-3 p-4">
+        <div key={index} className="overflow-hidden rounded-sm border p-4">
+          <div className="space-y-3">
             <Skeleton className="h-5 w-2/5" />
             <Skeleton className="h-3 w-3/5" />
             <Skeleton className="h-14 w-full" />
           </div>
+          <Skeleton className="mt-5 aspect-[5/4] w-full rounded-sm" />
         </div>
       ))}
     </div>
