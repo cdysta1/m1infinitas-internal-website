@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export const ONBOARDING_OPEN_EVENT = 'm1:open-onboarding';
 
-const COACHMARK_VERSION = 'v7';
+const COACHMARK_VERSION = 'v8';
 
 interface CoachmarkTip {
   id: string;
@@ -204,6 +204,8 @@ export function OnboardingGuide() {
     if (!activeTip || !target || !storageKey) return;
 
     let settleTimer: number | undefined;
+    const root = document.documentElement;
+    const previousOverflowY = root.style.overflowY;
 
     const updateRect = () => {
       if (!target.isConnected) {
@@ -215,7 +217,8 @@ export function OnboardingGuide() {
       setTargetRect(snapshotRect(target));
     };
 
-    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+    root.style.overflowY = 'hidden';
     updateRect();
     settleTimer = window.setTimeout(updateRect, 360);
 
@@ -224,6 +227,7 @@ export function OnboardingGuide() {
 
     return () => {
       if (settleTimer) window.clearTimeout(settleTimer);
+      root.style.overflowY = previousOverflowY;
       window.removeEventListener('resize', updateRect);
       window.removeEventListener('scroll', updateRect, true);
     };
