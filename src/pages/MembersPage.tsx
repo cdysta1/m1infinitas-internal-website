@@ -81,22 +81,14 @@ export function MembersPage() {
   return (
     <AppShell showCreate={false}>
       <DirectoryTabs />
-      <div className="mx-auto max-w-6xl px-4 pb-10 pt-7 sm:pt-9">
-        <header className="flex flex-col justify-between gap-5 border-b pb-7 sm:flex-row sm:items-end">
-          <div>
-            <p className="font-mono text-[10px] uppercase text-muted-foreground">
-              M1 / People Directory
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold">成员目录</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              从创作方向和学科专长认识团队，找到下一次协作需要的人。
-            </p>
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-4 sm:pt-5">
+        <header className="flex items-center justify-between gap-3 border-b pb-4">
+          <div className="font-mono text-xs text-muted-foreground">
+            {String(members.length).padStart(2, '0')} MEMBERS
           </div>
-          <div className="flex items-center gap-3">
-            <div className="font-mono text-xs text-muted-foreground">
-              {String(members.length).padStart(2, '0')} MEMBERS
-            </div>
+          <div className="flex items-center gap-2 sm:gap-3">
             <div
+              data-onboarding="member-density"
               className="flex items-center rounded-full border p-0.5"
               role="group"
               aria-label="成员卡片显示方式"
@@ -133,6 +125,7 @@ export function MembersPage() {
               </button>
             </div>
             <Link
+              data-onboarding="member-search"
               to="/members/search"
               aria-label="搜索成员"
               title="搜索成员"

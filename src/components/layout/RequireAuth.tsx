@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { OnboardingGuide } from '@/components/onboarding/OnboardingGuide';
 
 // Route guard: bounce unauthenticated users to /login while preserving intent.
 export function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -16,7 +17,12 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   if (status !== 'authenticated') {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <OnboardingGuide />
+    </>
+  );
 }
 
 // Redirects authenticated users away from login/register back to the gallery.

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, Plus } from 'lucide-react';
+import { CircleHelp, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ONBOARDING_OPEN_EVENT } from '@/components/onboarding/OnboardingGuide';
 import { useAuth } from '@/hooks/useAuth';
 import { getAvatarUrl } from '@/lib/media';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,6 +39,16 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
               <Plus className="h-5 w-5" />
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="iconSm"
+            onClick={() => window.dispatchEvent(new Event(ONBOARDING_OPEN_EVENT))}
+            aria-label="查看功能引导"
+            title="功能引导"
+            className="text-muted-foreground"
+          >
+            <CircleHelp className="h-4 w-4" />
+          </Button>
           <Link to="/me" aria-label="我的" className="ml-1 flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src={avatarUrl} alt={displayName} />

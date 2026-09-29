@@ -28,12 +28,12 @@ export function buildPreviewUrl(
 }
 
 const DEFAULT_AVATAR_FILES = [
-  'default-orange.png',
-  'default-flower.png',
-  'default-blue-mask.png',
-  'default-purple-face.png',
-  'default-mint-face.png',
-  'default-cyan-curls.png',
+  'default-orange.webp',
+  'default-flower.webp',
+  'default-blue-mask.webp',
+  'default-purple-face.webp',
+  'default-mint-face.webp',
+  'default-cyan-curls.webp',
 ] as const;
 
 const DEMO_AVATAR_INDEX: Record<string, number> = {

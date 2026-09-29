@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom';
-import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -7,11 +6,7 @@ const tabs = [
   { label: '成员', to: '/members', end: false },
 ] as const;
 
-interface DirectoryTabsProps {
-  onCreateClick?: () => void;
-}
-
-export function DirectoryTabs({ onCreateClick }: DirectoryTabsProps) {
+export function DirectoryTabs() {
   return (
     <nav aria-label="内容浏览" className="border-b">
       <div className="mx-auto flex h-12 max-w-6xl items-center px-4">
@@ -34,18 +29,6 @@ export function DirectoryTabs({ onCreateClick }: DirectoryTabsProps) {
             </NavLink>
           ))}
         </div>
-
-        {onCreateClick && (
-          <button
-            type="button"
-            onClick={onCreateClick}
-            aria-label="创建项目"
-            title="创建项目"
-            className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border text-foreground transition-[background-color,transform] hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        )}
       </div>
     </nav>
   );

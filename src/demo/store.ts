@@ -55,31 +55,31 @@ const demoInterlude = (fileName: string) =>
   new URL(`${import.meta.env.BASE_URL}demo/interludes/${fileName}`, window.location.origin).href;
 
 const covers = {
-  portrait: demoCover('green-portrait-bw.png'),
-  between: demoCover('between-poster-bw.png'),
-  thinking: demoCover('thinking-spring-bw.png'),
-  nurture: demoCover('nurture-poster-bw.png'),
-  culturehub: demoCover('culturehub-residency-bw.png'),
-  voronoi: demoCover('voronoi-poster-bw.png'),
+  portrait: demoCover('green-portrait-bw.webp'),
+  between: demoCover('between-poster-bw.webp'),
+  thinking: demoCover('thinking-spring-bw.webp'),
+  nurture: demoCover('nurture-poster-bw.webp'),
+  culturehub: demoCover('culturehub-residency-bw.webp'),
+  voronoi: demoCover('voronoi-poster-bw.webp'),
 } as const;
 
 const processImages = {
-  portrait: demoProcess('double-surface-process.png'),
-  between: demoProcess('between-process.png'),
-  thinking: demoProcess('thinking-spring-process.png'),
-  nurture: demoProcess('nurture-process.png'),
-  culturehub: demoProcess('residency-process.png'),
-  voronoi: demoProcess('voronoi-process.png'),
+  portrait: demoProcess('double-surface-process.webp'),
+  between: demoProcess('between-process.webp'),
+  thinking: demoProcess('thinking-spring-process.webp'),
+  nurture: demoProcess('nurture-process.webp'),
+  culturehub: demoProcess('residency-process.webp'),
+  voronoi: demoProcess('voronoi-process.webp'),
 } as const;
 
 const interludeCovers = {
-  displaced: demoInterlude('sufra-displaced-objects.png'),
-  lavra: demoInterlude('lavra-poster.png'),
-  cyborg: demoInterlude('cyborg-system.png'),
-  pixelHabitat: demoInterlude('pixel-roof.png'),
-  organicType: demoInterlude('organic-letterforms.png'),
-  futureSculpture: demoInterlude('future-sculpture.png'),
-  shigeto: demoInterlude('shigeto-poster.png'),
+  displaced: demoInterlude('sufra-displaced-objects.webp'),
+  lavra: demoInterlude('lavra-poster.webp'),
+  cyborg: demoInterlude('cyborg-system.webp'),
+  pixelHabitat: demoInterlude('pixel-roof.webp'),
+  organicType: demoInterlude('organic-letterforms.webp'),
+  futureSculpture: demoInterlude('future-sculpture.webp'),
+  shigeto: demoInterlude('shigeto-poster.webp'),
 } as const;
 
 export const demoUser = {
@@ -412,6 +412,25 @@ function createSeedState(): DemoState {
   return { version: 9, profiles, projects, updates };
 }
 
+function migrateDemoAssetUrl(value: string): string {
+  if (!value.includes('/demo/')) return value;
+  return value.replace(/\.png(?=($|[?#]))/i, '.webp');
+}
+
+function migrateDemoAssets(state: DemoState): DemoState {
+  return {
+    ...state,
+    projects: state.projects.map((project) => ({
+      ...project,
+      cover_file_id: migrateDemoAssetUrl(project.cover_file_id),
+    })),
+    updates: state.updates.map((update) => ({
+      ...update,
+      file_ids: update.file_ids.map(migrateDemoAssetUrl),
+    })),
+  };
+}
+
 function getState(): DemoState {
   if (memoryState) return memoryState;
   try {
@@ -419,7 +438,8 @@ function getState(): DemoState {
     if (saved) {
       const parsed = JSON.parse(saved) as DemoState;
       if (parsed.version === 9) {
-        memoryState = parsed;
+        memoryState = migrateDemoAssets(parsed);
+        persist();
         return memoryState;
       }
     }
@@ -503,6 +523,12 @@ export async function demoListProjects(opts: { status?: ProjectStatus; limit?: n
   };
 }
 
+export async function demoListProjectsByOwner(ownerId: string): Promise<Project[]> {
+  return getState().projects
+    .filter((project) => project.owner_id === ownerId)
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
 export async function demoGetProject(id: string): Promise<Project> {
   const project = getState().projects.find((item) => item.$id === id);
   if (!project) throw new Error('演示项目不存在');
@@ -522,6 +548,27 @@ export async function demoCreateProject(input: { title: string; summary: string;
   persist();
   projectListeners.forEach((listener) => listener());
   return project;
+}
+
+export async function demoUpdateProject(
+  id: string,
+  patch: Partial<Pick<Project, 'title' | 'summary' | 'cover_file_id'>>,
+): Promise<Project> {
+  const state = getState();
+  const index = state.projects.findIndex((project) => project.$id === id);
+  if (index < 0) throw new Error('演示项目不存在');
+
+  const now = new Date().toISOString();
+  const updated: Project = {
+    ...state.projects[index],
+    ...patch,
+    updated_at: now,
+    $updatedAt: now,
+  };
+  state.projects[index] = updated;
+  persist();
+  projectListeners.forEach((listener) => listener());
+  return updated;
 }
 
 export async function demoTouchProject(id: string): Promise<Project | null> {
@@ -574,6 +621,25 @@ export async function demoCreateUpdate(input: { project_id: string; content: str
   persist();
   updateListeners.forEach((listener) => listener(update));
   return update;
+}
+
+export async function demoUpdateUpdate(
+  id: string,
+  patch: Partial<Pick<UpdateItem, 'content' | 'file_ids'>>,
+): Promise<UpdateItem> {
+  const state = getState();
+  const index = state.updates.findIndex((update) => update.$id === id);
+  if (index < 0) throw new Error('演示项目图片记录不存在');
+
+  const updated: UpdateItem = {
+    ...state.updates[index],
+    ...patch,
+    $updatedAt: new Date().toISOString(),
+  };
+  state.updates[index] = updated;
+  persist();
+  updateListeners.forEach((listener) => listener(updated));
+  return updated;
 }
 
 export async function demoDeleteUpdate(id: string): Promise<void> {

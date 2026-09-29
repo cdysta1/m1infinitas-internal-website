@@ -42,9 +42,8 @@ export function realtimePayloadToEntry(p: RealtimeUpdatePayload): TimelineEntry 
   };
 }
 
-// Paginated timeline (newest first) with realtime insertion.
-// Local optimistic entries are stored separately by useCreateUpdate via
-// queryClient.setQueryData on this key.
+// Paginated project media records (newest first) with realtime insertion.
+// Project creation can seed a local optimistic entry on this query key.
 export function useUpdatesTimeline(projectId: string | undefined) {
   const qc = useQueryClient();
 

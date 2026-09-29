@@ -15,10 +15,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ImagePicker, type PickedImage } from './ImagePicker';
 import { useCreateProject } from '@/hooks/useCreateProject';
+import { MAX_PROJECT_SUMMARY_LENGTH } from '@/lib/constants';
 
 interface CreateProjectDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+function moveFirstImageToFront(items: PickedImage[]): PickedImage[] {
+  const coverIndex = items.findIndex((item) => item.file.type.startsWith('image/'));
+  if (coverIndex <= 0) return items;
+  return [items[coverIndex], ...items.filter((_, index) => index !== coverIndex)];
 }
 
 export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerProps) {
@@ -44,6 +51,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
     title.trim().length > 0 &&
     summary.trim().length > 0 &&
     images.length > 0 &&
+    images.some((image) => image.file.type.startsWith('image/')) &&
     !createProject.isPending;
 
   const onSubmit = () => {
@@ -74,16 +82,17 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
         <DrawerHeader>
           <DrawerTitle>发布新项目</DrawerTitle>
           <DrawerDescription>
-            选几张图，写一句话，就这么简单
+            选择图片或视频，再写一段项目介绍
           </DrawerDescription>
         </DrawerHeader>
 
         <div className="space-y-4">
           <ImagePicker
             value={images}
-            onChange={setImages}
+            onChange={(next) => setImages(moveFirstImageToFront(next))}
             disabled={createProject.isPending}
-            hint="第 1 张自动作为封面，最多 9 张"
+            showFirstAsCover={Boolean(images[0]?.file.type.startsWith('image/'))}
+            hint="至少 1 张图片作为封面；图片与视频合计最多 9 个"
           />
 
           <div className="space-y-1.5">
@@ -98,12 +107,19 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
             <Textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="一句话简介这个项目…"
-              maxLength={200}
-              rows={2}
+              placeholder="项目介绍（最多 500 字）"
+              maxLength={MAX_PROJECT_SUMMARY_LENGTH}
+              rows={5}
               disabled={createProject.isPending}
-              className="min-h-[64px]"
+              aria-describedby="project-summary-count"
+              className="min-h-[120px]"
             />
+            <div
+              id="project-summary-count"
+              className="text-right font-mono text-[10px] text-muted-foreground"
+            >
+              {summary.length}/{MAX_PROJECT_SUMMARY_LENGTH}
+            </div>
           </div>
         </div>
 

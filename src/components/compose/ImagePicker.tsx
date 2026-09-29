@@ -14,17 +14,18 @@ interface ImagePickerProps {
   onChange: (next: PickedImage[]) => void;
   max?: number;
   disabled?: boolean;
+  showFirstAsCover?: boolean;
   // Hint shown under the picker, e.g. "第 1 张为封面"
   hint?: string;
 }
 
-// Mobile-first image picker. The hidden <input> uses capture="environment"
-// so iOS/Android surfaces the native camera / photo library chooser.
+// Mobile-first media picker for images and videos.
 export function ImagePicker({
   value,
   onChange,
   max = MAX_IMAGES_PER_POST,
   disabled,
+  showFirstAsCover = true,
   hint,
 }: ImagePickerProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -46,12 +47,12 @@ export function ImagePicker({
     }
     const room = max - value.length;
     if (room <= 0) {
-      toast.error(`最多选择 ${max} 张`);
+      toast.error(`最多选择 ${max} 个媒体`);
       return;
     }
     const accepted = incoming.slice(0, room);
     if (incoming.length > room) {
-      toast.message(`已截取前 ${room} 张`);
+      toast.message(`已截取前 ${room} 个媒体`);
     }
     const next = accepted.map<PickedImage>((file) => ({
       file,
@@ -85,45 +86,54 @@ export function ImagePicker({
           addFiles(e.dataTransfer.files);
         }}
       >
-        {value.map((img, idx) => (
-          <div
-            key={img.previewUrl}
-            className="group relative aspect-square overflow-hidden rounded-lg bg-muted"
-          >
-            {img.file.type.startsWith('video/') ? (
-              <video
-                src={img.previewUrl}
-                className="h-full w-full object-cover"
-                muted
-                playsInline
-              />
-            ) : (
-              <img
-                src={img.previewUrl}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-            )}
-            {idx === 0 && (
-              <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                封面
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => removeAt(idx)}
-              aria-label={`移除第 ${idx + 1} 张`}
-              className={cn(
-                'absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white',
-                'opacity-0 transition-opacity group-hover:opacity-100',
-                // Always visible on touch devices.
-                'touch-action-manipulation [@media(hover:none)]:opacity-100',
-              )}
+        {value.map((img, idx) => {
+          const isVideo = img.file.type.startsWith('video/');
+          return (
+            <div
+              key={img.previewUrl}
+              className="group relative aspect-square overflow-hidden rounded-lg bg-muted"
             >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
+              {isVideo ? (
+                <video
+                  src={img.previewUrl}
+                  className="h-full w-full object-cover"
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+              ) : (
+                <img
+                  src={img.previewUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              )}
+              {showFirstAsCover && idx === 0 && (
+                <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  封面
+                </span>
+              )}
+              {isVideo && (
+                <span className="absolute bottom-1 left-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  视频
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => removeAt(idx)}
+                aria-label={`移除第 ${idx + 1} 个媒体`}
+                className={cn(
+                  'absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white',
+                  'opacity-0 transition-opacity group-hover:opacity-100',
+                  // Always visible on touch devices.
+                  'touch-action-manipulation [@media(hover:none)]:opacity-100',
+                )}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          );
+        })}
 
         {value.length < max && !disabled && (
           <button
@@ -133,7 +143,7 @@ export function ImagePicker({
               'flex aspect-square items-center justify-center rounded-lg border border-dashed',
               'text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground',
             )}
-            aria-label="添加图片"
+            aria-label="添加图片或视频"
           >
             <div className="flex flex-col items-center gap-1">
               <Plus className="h-5 w-5" />
