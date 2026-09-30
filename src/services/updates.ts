@@ -1,9 +1,20 @@
 import { ID, Permission, Query, Role } from 'appwrite';
 import { COLLECTIONS, DATABASE_ID, databases, realtime } from '@/lib/appwrite';
 import { TIMELINE_PAGE_SIZE } from '@/lib/constants';
+import {
+  isProjectMediaRecord,
+  serializeProjectMediaRecord,
+  type ProjectMediaKind,
+} from '@/lib/projectMedia';
 import type { UpdateItem } from '@/types/models';
 import { env } from '@/lib/env';
-import { demoCreateUpdate, demoDeleteUpdate, demoListUpdates, demoSubscribeUpdates } from '@/demo/store';
+import {
+  demoCreateUpdate,
+  demoDeleteUpdate,
+  demoListUpdates,
+  demoSubscribeUpdates,
+  demoUpdateUpdate,
+} from '@/demo/store';
 
 export interface CreateUpdateInput {
   project_id: string;
@@ -65,6 +76,46 @@ export async function createUpdate(input: CreateUpdateInput): Promise<UpdateItem
       Permission.delete(Role.user(input.author_id)),
     ],
   );
+}
+
+export async function updateUpdate(
+  id: string,
+  patch: Partial<Pick<UpdateItem, 'content' | 'file_ids'>>,
+): Promise<UpdateItem> {
+  if (env.demoMode) return demoUpdateUpdate(id, patch);
+  return databases.updateDocument<UpdateItem>(
+    DATABASE_ID,
+    COLLECTIONS.updates,
+    id,
+    patch,
+  );
+}
+
+export async function saveProjectMediaRecord(input: {
+  projectId: string;
+  authorId: string;
+  fileIds: string[];
+  mediaKinds: ProjectMediaKind[];
+}): Promise<UpdateItem> {
+  const existing = await listUpdatesByProject(input.projectId, { limit: 100 });
+  const mediaRecord = existing.updates.find(
+    (update) => isProjectMediaRecord(update.content),
+  );
+  const content = serializeProjectMediaRecord(input.mediaKinds);
+
+  if (mediaRecord) {
+    return updateUpdate(mediaRecord.$id, {
+      content,
+      file_ids: input.fileIds,
+    });
+  }
+
+  return createUpdate({
+    project_id: input.projectId,
+    author_id: input.authorId,
+    content,
+    file_ids: input.fileIds,
+  });
 }
 
 export async function deleteUpdate(id: string): Promise<void> {

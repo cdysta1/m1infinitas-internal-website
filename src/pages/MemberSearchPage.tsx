@@ -92,7 +92,7 @@ export function MemberSearchPage() {
   };
 
   return (
-    <AppShell showCreate={false}>
+    <AppShell showCreate={false} onSwipeBack={returnToMembers}>
       <div className="search-page-enter mx-auto max-w-3xl px-4 pb-12 pt-4 sm:pt-6">
         <div className="flex items-center gap-3">
           <button

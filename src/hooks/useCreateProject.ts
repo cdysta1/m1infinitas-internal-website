@@ -1,9 +1,15 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
-import { createProject, touchProject } from '@/services/projects';
+import { createProject } from '@/services/projects';
+import { createUpdate } from '@/services/updates';
 import { uploadMany } from '@/services/storage';
 import { useAuth } from './useAuth';
 import { projectsFeedKey, type FeedPage } from './useProjectsFeed';
-import { OPTIMISTIC, PROJECT_STATUS } from '@/lib/constants';
+import {
+  MAX_PROJECT_SUMMARY_LENGTH,
+  OPTIMISTIC,
+  PROJECT_STATUS,
+} from '@/lib/constants';
+import { serializeProjectMediaRecord } from '@/lib/projectMedia';
 import { tempId } from '@/lib/utils';
 import type { Profile, Project, TimelineEntry } from '@/types/models';
 import { timelineKey, type TimelinePage } from './useUpdatesTimeline';
@@ -24,7 +30,7 @@ export interface CreateProjectResult {
 // Optimistic project creation:
 // 1. Insert a placeholder project into the feed cache immediately.
 // 2. Insert a first timeline entry marked "pending" for the initial post.
-// 3. Upload images, then create the real project + first update on server.
+// 3. Upload images, then create the real project + its persisted media record.
 // 4. Replace the placeholder ids on success, or mark failed on error.
 export function useCreateProject() {
   const qc = useQueryClient();
@@ -34,6 +40,12 @@ export function useCreateProject() {
     mutationFn: async ({ title, summary, files }) => {
       if (!user) throw new Error('未登录');
       if (files.length === 0) throw new Error('至少选择 1 张图片');
+      if (!files[0].type.startsWith('image/')) {
+        throw new Error('项目需要至少 1 张图片作为封面');
+      }
+      if (summary.length > MAX_PROJECT_SUMMARY_LENGTH) {
+        throw new Error(`项目介绍不能超过 ${MAX_PROJECT_SUMMARY_LENGTH} 字`);
+      }
       const uploads = await uploadMany(files, user.$id);
       const cover = uploads[0].fileId;
       const project = await createProject({
@@ -42,9 +54,17 @@ export function useCreateProject() {
         cover_file_id: cover,
         owner_id: user.$id,
       });
+      await createUpdate({
+        project_id: project.$id,
+        content: serializeProjectMediaRecord(
+          files.map((file) => file.type.startsWith('video/') ? 'video' : 'image'),
+        ),
+        author_id: user.$id,
+        file_ids: uploads.map((upload) => upload.fileId),
+      });
       return { project };
     },
-    onMutate: async ({ title, summary, localPreviewUrls }) => {
+    onMutate: async ({ title, summary, files, localPreviewUrls }) => {
       const tempProjectId = tempId('proj');
       const tempUpdateId = tempId('upd');
       const nowIso = new Date().toISOString();
@@ -86,7 +106,9 @@ export function useCreateProject() {
         id: tempUpdateId,
         projectId: tempProjectId,
         authorId: user?.$id ?? '',
-        content: summary,
+        content: serializeProjectMediaRecord(
+          files.map((file) => file.type.startsWith('video/') ? 'video' : 'image'),
+        ),
         createdAt: nowIso,
         fileIds: [],
         localPreviewUrls,
@@ -140,8 +162,7 @@ export function useCreateProject() {
         qc.removeQueries({ queryKey: timelineKey(ctx.tempProjectId) });
       }
 
-      // Bump updated_at so the gallery re-sorts.
-      await touchProject(project.$id);
+      await qc.invalidateQueries({ queryKey: timelineKey(project.$id) });
       qc.invalidateQueries({ queryKey: projectsFeedKey });
     },
     onError: (_err, _vars, ctx) => {

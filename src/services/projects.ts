@@ -7,8 +7,10 @@ import {
   demoCreateProject,
   demoGetProject,
   demoListProjects,
+  demoListProjectsByOwner,
   demoSubscribeProjects,
   demoTouchProject,
+  demoUpdateProject,
   demoUpdateProjectStatus,
 } from '@/demo/store';
 
@@ -24,6 +26,10 @@ export interface ListProjectsResult {
   total: number;
   cursor?: string;
 }
+
+export type UpdateProjectInput = Partial<
+  Pick<Project, 'title' | 'summary' | 'cover_file_id'>
+>;
 
 // List active projects ordered by updated_at desc, cursor-paginated.
 export async function listProjects(opts: {
@@ -58,6 +64,16 @@ export async function getProject(id: string): Promise<Project> {
   return databases.getDocument<Project>(DATABASE_ID, COLLECTIONS.projects, id);
 }
 
+export async function listProjectsByOwner(ownerId: string): Promise<Project[]> {
+  if (env.demoMode) return demoListProjectsByOwner(ownerId);
+  const res = await databases.listDocuments<Project>(
+    DATABASE_ID,
+    COLLECTIONS.projects,
+    [Query.equal('owner_id', ownerId), Query.limit(100)],
+  );
+  return [...res.documents].sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
 export async function createProject(input: CreateProjectInput): Promise<Project> {
   if (env.demoMode) return demoCreateProject(input);
   const now = new Date().toISOString();
@@ -78,6 +94,22 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
       Permission.update(Role.user(input.owner_id)),
       Permission.delete(Role.user(input.owner_id)),
     ],
+  );
+}
+
+export async function updateProject(
+  id: string,
+  input: UpdateProjectInput,
+): Promise<Project> {
+  if (env.demoMode) return demoUpdateProject(id, input);
+  return databases.updateDocument<Project>(
+    DATABASE_ID,
+    COLLECTIONS.projects,
+    id,
+    {
+      ...input,
+      updated_at: new Date().toISOString(),
+    },
   );
 }
 
