@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { createProject } from '@/services/projects';
 import { createUpdate } from '@/services/updates';
@@ -33,18 +34,19 @@ export interface CreateProjectResult {
 // 3. Upload images, then create the real project + its persisted media record.
 // 4. Replace the placeholder ids on success, or mark failed on error.
 export function useCreateProject() {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const { user, profile } = useAuth();
 
   return useMutation<CreateProjectResult, Error, CreateProjectArgs, { tempProjectId: string; tempUpdateId: string }>({
     mutationFn: async ({ title, summary, files }) => {
-      if (!user) throw new Error('未登录');
-      if (files.length === 0) throw new Error('至少选择 1 张图片');
+      if (!user) throw new Error(t('未登录'));
+      if (files.length === 0) throw new Error(t('至少选择 1 张图片'));
       if (!files[0].type.startsWith('image/')) {
-        throw new Error('项目需要至少 1 张图片作为封面');
+        throw new Error(t('项目需要至少 1 张图片作为封面'));
       }
       if (summary.length > MAX_PROJECT_SUMMARY_LENGTH) {
-        throw new Error(`项目介绍不能超过 ${MAX_PROJECT_SUMMARY_LENGTH} 字`);
+        throw new Error(t('项目介绍不能超过 {count} 字', { count: MAX_PROJECT_SUMMARY_LENGTH }));
       }
       const uploads = await uploadMany(files, user.$id);
       const cover = uploads[0].fileId;

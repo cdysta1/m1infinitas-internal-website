@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useI18n } from '@/app/I18nProvider';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MousePointerClick, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
@@ -127,6 +128,7 @@ function snapshotRect(element: HTMLElement): RectSnapshot {
 }
 
 export function OnboardingGuide() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const location = useLocation();
   const guide = useMemo(() => getPageGuide(location.pathname), [location.pathname]);
@@ -138,6 +140,7 @@ export function OnboardingGuide() {
   const [targetRect, setTargetRect] = useState<RectSnapshot | null>(null);
   const [replayNonce, setReplayNonce] = useState(0);
   const [hydratedStorageKey, setHydratedStorageKey] = useState<string | null>(null);
+  const enteredSnapshot = useRef<{ storageKey: string; hasEntered: boolean } | null>(null);
 
   useEffect(() => {
     setHydratedStorageKey(null);
@@ -146,12 +149,17 @@ export function OnboardingGuide() {
     setTargetRect(null);
 
     if (!storageKey || !guide) {
+      enteredSnapshot.current = null;
       setSeenIds([]);
       return;
     }
 
     const enteredKey = getEnteredKey(storageKey);
-    const hasEntered = window.localStorage.getItem(enteredKey) === '1';
+    // Strict Mode repeats initial effects; keep the first-entry decision for that hydration.
+    const hasEntered = enteredSnapshot.current?.storageKey === storageKey
+      ? enteredSnapshot.current.hasEntered
+      : window.localStorage.getItem(enteredKey) === '1';
+    enteredSnapshot.current = { storageKey, hasEntered };
     const savedTips = readSeenTips(storageKey);
 
     window.localStorage.setItem(enteredKey, '1');
@@ -164,6 +172,7 @@ export function OnboardingGuide() {
       if (!storageKey) return;
       window.localStorage.removeItem(storageKey);
       window.localStorage.removeItem(getEnteredKey(storageKey));
+      enteredSnapshot.current = null;
       setReplayNonce((value) => value + 1);
     };
 
@@ -283,7 +292,7 @@ export function OnboardingGuide() {
     <div aria-live="polite">
       <button
         type="button"
-        aria-label="下一个功能提示"
+        aria-label={t('下一个功能提示')}
         onClick={advanceGuide}
         className="fixed inset-0 cursor-default bg-transparent focus-visible:outline-none"
         style={{ zIndex: 80 }}
@@ -307,7 +316,7 @@ export function OnboardingGuide() {
 
       <section
         role="dialog"
-        aria-label={activeTip.title}
+        aria-label={t(activeTip.title)}
         className="pointer-events-none fixed rounded-md bg-foreground px-3 py-2.5 text-background shadow-[0_12px_34px_rgba(0,0,0,0.28)] transition-all duration-300"
         style={{ top: tooltipTop, left: tooltipLeft, width: tooltipWidth, zIndex: 83 }}
       >
@@ -318,8 +327,8 @@ export function OnboardingGuide() {
         />
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            <h2 className="text-[13px] font-semibold leading-5">{activeTip.title}</h2>
-            <p className="text-[11px] leading-4 text-background/65">{activeTip.description}</p>
+            <h2 className="text-[13px] font-semibold leading-5">{t(activeTip.title)}</h2>
+            <p className="text-[11px] leading-4 text-background/65">{t(activeTip.description)}</p>
           </div>
           <button
             type="button"
@@ -327,8 +336,8 @@ export function OnboardingGuide() {
               event.stopPropagation();
               skipPageGuide();
             }}
-            aria-label="关闭本页提示"
-            title="关闭本页提示"
+            aria-label={t('关闭本页提示')}
+            title={t('关闭本页提示')}
             className="pointer-events-auto -mr-1 -mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-background/60 transition-colors hover:bg-background/10 hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-background"
           >
             <X className="h-3.5 w-3.5" />
@@ -336,9 +345,7 @@ export function OnboardingGuide() {
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-background/15 pt-2">
           <span className="flex items-center gap-1 text-[10px] text-background/55">
-            <MousePointerClick className="h-3 w-3" />
-            任意处继续
-          </span>
+            <MousePointerClick className="h-3 w-3" />{t('任意处继续')}</span>
           <div className="flex items-center gap-1" aria-hidden>
             {guide.tips.map((tip, index) => (
               <span

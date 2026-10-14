@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import './styles/globals.css';
+import { translate, type Language } from './i18n/messages';
 
 // Fail loudly during bootstrap if required env vars are missing so we don't
 // ship a silently broken bundle to production. env.ts throws at import time,
@@ -20,16 +21,22 @@ function renderFatal(message: string) {
   if (!root) return;
   root.innerHTML =
     '<div style="font-family:system-ui,-apple-system,sans-serif;padding:24px;line-height:1.6;color:#111;max-width:32rem;margin:0 auto">' +
-    '<h1 style="font-size:16px;margin:0 0 8px">配置缺失</h1>' +
+    `<h1 style="font-size:16px;margin:0 0 8px">${translate(initialLanguage, '配置缺失')}</h1>` +
     '<p style="font-size:13px;color:#666;margin:0 0 12px">' +
     message +
     '</p>' +
-    '<p style="font-size:12px;color:#888;margin:0">请检查 .env 或 GitHub Actions Secrets。</p>' +
+    `<p style="font-size:12px;color:#888;margin:0">${translate(initialLanguage, '请检查 .env 或 GitHub Actions Secrets。')}</p>` +
     '</div>';
 }
 
+let initialLanguage: Language = navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+try {
+  const savedLanguage = localStorage.getItem('m1:language:v1:last');
+  if (savedLanguage === 'zh' || savedLanguage === 'en') initialLanguage = savedLanguage;
+} catch { /* The app remains usable when local storage is unavailable. */ }
+
 if (missing.length > 0) {
-  renderFatal(`缺少环境变量: ${missing.join(', ')}`);
+  renderFatal(translate(initialLanguage, '缺少环境变量: {names}', { names: missing.join(', ') }));
   throw new Error(`Missing required env: ${missing.join(', ')}`);
 }
 

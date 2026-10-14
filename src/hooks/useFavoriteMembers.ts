@@ -1,11 +1,14 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import type { MemberDirectoryEntry } from '@/lib/memberDirectory';
 import {
   getFavoriteMemberIds,
   saveFavoriteMemberIds,
 } from '@/services/memberFavorites';
 
-export function useFavoriteMembers(userId?: string) {
+export function useFavoriteMembers(userId?: string, members: MemberDirectoryEntry[] = []) {
+  const { t } = useI18n();
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(Boolean(userId));
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -29,7 +32,7 @@ export function useFavoriteMembers(userId?: string) {
         setFavoriteIds(ids);
       })
       .catch(() => {
-        if (!cancelled) toast.error('收藏成员加载失败');
+        if (!cancelled) toast.error(t('收藏成员加载失败'));
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -40,16 +43,26 @@ export function useFavoriteMembers(userId?: string) {
     };
   }, [userId]);
 
-  const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+  const resolveIds = useCallback((ids: string[]) => {
+    const aliases = new Map(
+      members.flatMap((member) => member.accountId
+        ? [[member.accountId, member.profile.$id] as const]
+        : []),
+    );
+    return Array.from(new Set(ids.map((id) => aliases.get(id) ?? id)));
+  }, [members]);
+  const resolvedIds = useMemo(() => resolveIds(favoriteIds), [favoriteIds, resolveIds]);
+  const favoriteSet = useMemo(() => new Set(resolvedIds), [resolvedIds]);
 
   const toggleFavorite = useCallback(
     async (memberId: string) => {
       if (!userId || pendingId) return;
 
       const previous = favoriteIdsRef.current;
-      const next = previous.includes(memberId)
-        ? previous.filter((id) => id !== memberId)
-        : [memberId, ...previous];
+      const current = resolveIds(previous);
+      const next = current.includes(memberId)
+        ? current.filter((id) => id !== memberId)
+        : [memberId, ...current];
 
       favoriteIdsRef.current = next;
       setFavoriteIds(next);
@@ -62,16 +75,16 @@ export function useFavoriteMembers(userId?: string) {
       } catch {
         favoriteIdsRef.current = previous;
         setFavoriteIds(previous);
-        toast.error('收藏状态保存失败');
+        toast.error(t('收藏状态保存失败'));
       } finally {
         setPendingId(null);
       }
     },
-    [pendingId, userId],
+    [pendingId, userId, resolveIds, t],
   );
 
   return {
-    favoriteIds,
+    favoriteIds: resolvedIds,
     favoriteSet,
     isLoading,
     pendingId,

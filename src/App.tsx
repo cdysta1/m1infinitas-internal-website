@@ -3,6 +3,7 @@ import { router } from './router';
 import { QueryProvider } from './app/QueryProvider';
 import { AuthProvider } from './app/AuthProvider';
 import { ToastProvider } from './app/ToastProvider';
+import { I18nProvider } from './app/I18nProvider';
 
 // Provider composition:
 // Toast (outermost so toasts can be triggered from anywhere)
@@ -14,7 +15,9 @@ export function App() {
     <ToastProvider>
       <QueryProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <I18nProvider>
+            <RouterProvider router={router} />
+          </I18nProvider>
         </AuthProvider>
       </QueryProvider>
     </ToastProvider>

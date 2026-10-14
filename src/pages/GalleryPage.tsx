@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AppShell } from '@/components/layout/AppShell';
@@ -17,6 +18,7 @@ import {
 import { Loader2, Plus } from 'lucide-react';
 
 export function GalleryPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const restoredScrollRef = useRef(false);
@@ -94,12 +96,14 @@ export function GalleryPage() {
           type="button"
           data-onboarding="create-project"
           onClick={() => setCreateOpen(true)}
-          aria-label="创建项目"
-          title="创建项目"
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-[0_10px_30px_rgba(0,0,0,0.24)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(0,0,0,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95 sm:bottom-6 sm:right-6"
+          aria-label={t('发布项目')}
+          title={t('发布项目')}
+          aria-haspopup="dialog"
+          aria-expanded={createOpen}
+          className="create-project-fab fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background bg-foreground text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95 motion-reduce:active:scale-100 sm:bottom-6 sm:right-6"
           style={{ zIndex: 40 }}
         >
-          <Plus className="h-6 w-6" />
+          <Plus strokeWidth={2.5} className="h-8 w-8" />
         </button>,
         document.body,
       )}
@@ -110,12 +114,10 @@ export function GalleryPage() {
           <MasonrySkeleton count={8} />
         ) : projects.length === 0 ? (
           <EmptyState
-            title="还没有进行中的项目"
-            description="点击右下角 + 号，发布第一个项目"
+            title={t('还没有进行中的项目')}
+            description={t('点击右下角 + 号，发布第一个项目')}
             action={
-              <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
-                发布项目
-              </Button>
+              <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>{t('发布项目')}</Button>
             }
           />
         ) : (
@@ -142,15 +144,11 @@ export function GalleryPage() {
 
             {isFetchingNextPage && (
               <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                加载中…
-              </div>
+                <Loader2 className="h-3 w-3 animate-spin" />{t('加载中…')}</div>
             )}
 
             {!hasNextPage && projects.length > 0 && (
-              <div className="mt-10 text-center text-[11px] text-muted-foreground/70">
-                — 到底啦 —
-              </div>
+              <div className="mt-10 text-center text-[11px] text-muted-foreground/70">{t('— 到底啦 —')}</div>
             )}
           </>
         )}
@@ -162,9 +160,7 @@ export function GalleryPage() {
               type="button"
               onClick={() => refetch()}
               className="text-[11px] text-muted-foreground/70 underline-offset-4 hover:text-muted-foreground hover:underline"
-            >
-              刷新
-            </button>
+            >{t('刷新')}</button>
           </div>
         )}
       </div>

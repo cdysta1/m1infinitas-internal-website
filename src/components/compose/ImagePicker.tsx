@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
 import { Plus, X, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,6 +29,7 @@ export function ImagePicker({
   showFirstAsCover = true,
   hint,
 }: ImagePickerProps) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -42,17 +44,17 @@ export function ImagePicker({
   const addFiles = (files: FileList | File[]) => {
     const incoming = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
     if (incoming.length === 0) {
-      toast.error('请选择图片或视频');
+      toast.error(t('请选择图片或视频'));
       return;
     }
     const room = max - value.length;
     if (room <= 0) {
-      toast.error(`最多选择 ${max} 个媒体`);
+      toast.error(t('最多选择 {count} 个媒体', { count: max }));
       return;
     }
     const accepted = incoming.slice(0, room);
     if (incoming.length > room) {
-      toast.message(`已截取前 ${room} 个媒体`);
+      toast.message(t('已截取前 {count} 个媒体', { count: room }));
     }
     const next = accepted.map<PickedImage>((file) => ({
       file,
@@ -109,19 +111,15 @@ export function ImagePicker({
                 />
               )}
               {showFirstAsCover && idx === 0 && (
-                <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                  封面
-                </span>
+                <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">{t('封面')}</span>
               )}
               {isVideo && (
-                <span className="absolute bottom-1 left-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                  视频
-                </span>
+                <span className="absolute bottom-1 left-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">{t('视频')}</span>
               )}
               <button
                 type="button"
                 onClick={() => removeAt(idx)}
-                aria-label={`移除第 ${idx + 1} 个媒体`}
+                aria-label={t('移除第 {index} 个媒体', { index: idx + 1 })}
                 className={cn(
                   'absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white',
                   'opacity-0 transition-opacity group-hover:opacity-100',
@@ -143,7 +141,7 @@ export function ImagePicker({
               'flex aspect-square items-center justify-center rounded-lg border border-dashed',
               'text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground',
             )}
-            aria-label="添加图片或视频"
+            aria-label={t('添加图片或视频')}
           >
             <div className="flex flex-col items-center gap-1">
               <Plus className="h-5 w-5" />

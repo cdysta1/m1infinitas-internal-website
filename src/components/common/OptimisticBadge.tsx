@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { OPTIMISTIC, type OptimisticStatus } from '@/lib/constants';
@@ -9,6 +10,7 @@ interface OptimisticBadgeProps {
 
 // Compact status pill for optimistic items.
 export function OptimisticBadge({ status, className }: OptimisticBadgeProps) {
+  const { t } = useI18n();
   if (!status || status === OPTIMISTIC.SENT) return null;
   const isPending = status === OPTIMISTIC.PENDING;
   return (
@@ -21,14 +23,10 @@ export function OptimisticBadge({ status, className }: OptimisticBadgeProps) {
     >
       {isPending ? (
         <>
-          <Loader2 className="h-3 w-3 animate-spin" />
-          发布中
-        </>
+          <Loader2 className="h-3 w-3 animate-spin" />{t('发布中')}</>
       ) : (
         <>
-          <AlertCircle className="h-3 w-3" />
-          发布失败
-        </>
+          <AlertCircle className="h-3 w-3" />{t('发布失败')}</>
       )}
     </span>
   );

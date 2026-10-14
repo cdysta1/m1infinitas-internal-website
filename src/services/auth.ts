@@ -3,6 +3,7 @@ import { account } from '@/lib/appwrite';
 import { env } from '@/lib/env';
 import { createProfile } from './profiles';
 import { demoUser } from '@/demo/store';
+import { waitForAccountPreferenceWrites } from '@/services/preferences';
 
 export interface RegisterInput {
   email: string;
@@ -82,6 +83,7 @@ export async function login(email: string, password: string): Promise<Models.Use
 
 export async function logout(): Promise<void> {
   if (env.demoMode) return;
+  await waitForAccountPreferenceWrites();
   try {
     await account.deleteSession('current');
   } catch {

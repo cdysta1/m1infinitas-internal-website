@@ -1,17 +1,17 @@
+import { useI18n } from '@/app/I18nProvider';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { OnboardingGuide } from '@/components/onboarding/OnboardingGuide';
 
 // Route guard: bounce unauthenticated users to /login while preserving intent.
 export function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { t, ready } = useI18n();
   const { status } = useAuth();
   const location = useLocation();
 
-  if (status === 'loading') {
+  if (status === 'loading' || (status === 'authenticated' && !ready)) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
-        加载中…
-      </div>
+      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">{t('加载中…')}</div>
     );
   }
   if (status !== 'authenticated') {
@@ -27,12 +27,11 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
 // Redirects authenticated users away from login/register back to the gallery.
 export function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   const { status } = useAuth();
   if (status === 'loading') {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
-        加载中…
-      </div>
+      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">{t('加载中…')}</div>
     );
   }
   if (status === 'authenticated') return <Navigate to="/" replace />;

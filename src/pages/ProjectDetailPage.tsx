@@ -1,9 +1,11 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Copy, Heart, Loader2, Pencil } from 'lucide-react';
+import { ArrowLeft, Copy, Loader2, Pencil } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SmartImage } from '@/components/common/SmartImage';
+import { FavoriteButton } from '@/components/common/FavoriteButton';
 import { EditProjectDrawer } from '@/components/project/EditProjectDrawer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -27,8 +29,8 @@ interface ProjectMedia {
   kind: ProjectMediaKind;
 }
 
-function formatProjectDate(value: string): string {
-  return new Intl.DateTimeFormat('zh-CN', {
+function formatProjectDate(value: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -36,6 +38,7 @@ function formatProjectDate(value: string): string {
 }
 
 export function ProjectDetailPage() {
+  const { t, locale } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -92,7 +95,7 @@ export function ProjectDetailPage() {
     );
   }
 
-  const ownerName = owner?.name ?? '匿名';
+  const ownerName = owner?.name ?? t('匿名');
   const ownerAvatar = getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
   const favorite = favoriteSet.has(project.$id);
   const favoriteBusy = favoritesLoading || favoritePendingId !== null;
@@ -108,11 +111,9 @@ export function ProjectDetailPage() {
             onClick={returnToGallery}
             className="-ml-3 gap-2 text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />
-            返回首页
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('返回首页')}</Button>
           <span className="font-mono text-[9px] uppercase text-muted-foreground">
-            Project archive
+            {t('项目档案')}
           </span>
         </div>
       </div>
@@ -120,10 +121,8 @@ export function ProjectDetailPage() {
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.72fr)] lg:items-start lg:gap-12 lg:px-8 lg:py-10">
         <section className="order-2 min-w-0 lg:order-1" aria-labelledby="project-media-heading">
           <div className="mb-3 flex items-center justify-between border-b pb-2 font-mono text-[9px] uppercase text-muted-foreground">
-            <h2 id="project-media-heading" className="font-normal">
-              项目媒体
-            </h2>
-            <span>{String(media.length).padStart(2, '0')} media</span>
+            <h2 id="project-media-heading" className="font-normal">{t('项目媒体')}</h2>
+            <span>{String(media.length).padStart(2, '0')} {t('媒体')}</span>
           </div>
 
           <div className="grid grid-cols-2 items-start gap-2 lg:gap-4">
@@ -138,7 +137,7 @@ export function ProjectDetailPage() {
                 {item.kind === 'video' ? (
                   <video
                     src={item.src}
-                    aria-label={`${project.title}，项目视频 ${index + 1}`}
+                    aria-label={t('{name}，项目视频 {index}', { name: project.title, index: index + 1 })}
                     className="max-h-[82vh] min-h-40 w-full bg-black object-contain"
                     controls
                     playsInline
@@ -147,7 +146,7 @@ export function ProjectDetailPage() {
                 ) : (
                   <SmartImage
                     src={item.src}
-                    alt={`${project.title}，项目图像 ${index + 1}`}
+                    alt={t('{name}，项目图像 {index}', { name: project.title, index: index + 1 })}
                     wrapperClassName="w-full min-h-40"
                     imgClassName="h-auto w-full object-contain"
                   />
@@ -161,7 +160,7 @@ export function ProjectDetailPage() {
             {mediaLoading && media.length <= 1 && (
               <div className="col-span-2 flex min-h-32 items-center justify-center bg-muted text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="sr-only">正在加载项目媒体</span>
+                <span className="sr-only">{t('正在加载项目媒体')}</span>
               </div>
             )}
           </div>
@@ -170,7 +169,7 @@ export function ProjectDetailPage() {
         <aside className="order-1 min-w-0 lg:sticky lg:top-20 lg:order-2">
           <div className="flex items-center justify-between gap-3 border-b pb-3">
             <span className="font-mono text-[9px] uppercase text-muted-foreground">
-              Active project
+              {t('进行中的项目')}
             </span>
             <div className="flex items-center gap-2">
               {canEdit && (
@@ -181,32 +180,21 @@ export function ProjectDetailPage() {
                       variant="outline"
                       size="sm"
                       className="gap-2"
-                      aria-label={`编辑项目 ${project.title}`}
-                      title="编辑项目"
+                      aria-label={t('编辑项目 {name}', { name: project.title })}
+                      title={t('编辑项目')}
                     >
-                      <Pencil className="h-3.5 w-3.5" />
-                      编辑
-                    </Button>
+                      <Pencil className="h-3.5 w-3.5" />{t('编辑')}</Button>
                   )}
                 />
               )}
-              <button
-                type="button"
-                onClick={() => void toggleFavorite(project.$id)}
+              <FavoriteButton
+                favorite={favorite}
+                onToggle={() => void toggleFavorite(project.$id)}
                 disabled={favoriteBusy}
-                aria-label={`${favorite ? '取消收藏项目' : '收藏项目'} ${project.title}`}
-                aria-pressed={favorite}
-                title={favorite ? '取消收藏项目' : '收藏项目'}
-                className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-full border transition-[background-color,color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90',
-                  favorite
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground',
-                  favoriteBusy && 'cursor-wait opacity-50',
-                )}
-              >
-                <Heart className={cn('h-4 w-4', favorite && 'fill-current')} />
-              </button>
+                aria-label={`${favorite ? t('取消收藏项目') : t('收藏项目')} ${project.title}`}
+                title={favorite ? t('取消收藏项目') : t('收藏项目')}
+                className="h-9 w-9"
+              />
             </div>
           </div>
 
@@ -218,7 +206,7 @@ export function ProjectDetailPage() {
           </p>
 
           <div className="mt-8 border-t pt-5">
-            <p className="font-mono text-[9px] uppercase text-muted-foreground">项目负责人</p>
+            <p className="font-mono text-[9px] uppercase text-muted-foreground">{t('项目负责人')}</p>
             <div className="mt-3 flex items-center gap-3">
               <Avatar className="h-11 w-11">
                 <AvatarImage src={ownerAvatar} alt={ownerName} />
@@ -234,14 +222,12 @@ export function ProjectDetailPage() {
           {owner?.wechat && (
             <button
               type="button"
-              onClick={() => copy(owner.wechat, '微信号已复制')}
+              onClick={() => copy(owner.wechat, t('微信号已复制'))}
               className="mt-5 flex w-full items-center justify-between gap-4 border-y py-4 text-left transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`复制微信号 ${owner.wechat}`}
+              aria-label={t('复制微信号 {id}', { id: owner.wechat })}
             >
               <span>
-                <span className="block font-mono text-[9px] uppercase text-muted-foreground">
-                  微信
-                </span>
+                <span className="block font-mono text-[9px] uppercase text-muted-foreground">{t('微信')}</span>
                 <span className="mt-1 block text-sm font-medium">{owner.wechat}</span>
               </span>
               <Copy className={cn('h-4 w-4', copied && 'text-foreground')} />
@@ -250,12 +236,12 @@ export function ProjectDetailPage() {
 
           <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-b pb-5">
             <div>
-              <dt className="font-mono text-[9px] uppercase text-muted-foreground">媒体</dt>
+              <dt className="font-mono text-[9px] uppercase text-muted-foreground">{t('媒体')}</dt>
               <dd className="mt-1 text-sm">{String(media.length).padStart(2, '0')}</dd>
             </div>
             <div>
-              <dt className="font-mono text-[9px] uppercase text-muted-foreground">更新日期</dt>
-              <dd className="mt-1 text-sm">{formatProjectDate(project.updated_at)}</dd>
+              <dt className="font-mono text-[9px] uppercase text-muted-foreground">{t('更新日期')}</dt>
+              <dd className="mt-1 text-sm">{formatProjectDate(project.updated_at, locale)}</dd>
             </div>
           </dl>
         </aside>
@@ -265,11 +251,12 @@ export function ProjectDetailPage() {
 }
 
 export function ProjectNotFound() {
+  const { t } = useI18n();
   return (
     <AppShell showCreate={false}>
       <EmptyState
-        title="项目不存在或已被删除"
-        description="返回画廊看看其他项目"
+        title={t('项目不存在或已被删除')}
+        description={t('返回画廊看看其他项目')}
       />
     </AppShell>
   );

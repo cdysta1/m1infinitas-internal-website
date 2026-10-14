@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { Link, useNavigate } from 'react-router-dom';
 import { CircleHelp, LogOut, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { ONBOARDING_OPEN_EVENT } from '@/components/onboarding/OnboardingGuide';
 import { useAuth } from '@/hooks/useAuth';
 import { getAvatarUrl } from '@/lib/media';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 interface HeaderProps {
   onCreateClick?: () => void;
@@ -12,6 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
+  const { t } = useI18n();
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -24,16 +27,17 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link to="/" className="flex items-baseline gap-2">
           <span className="text-[15px] font-semibold tracking-tight">M1 Infinitas</span>
-          <span className="hidden text-xs text-muted-foreground sm:inline">内部协作</span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">{t('内部协作')}</span>
         </Link>
 
         <div className="flex items-center gap-1.5">
+          <LanguageSwitcher />
           {showCreate && onCreateClick && (
             <Button
               variant="ghost"
               size="icon"
               onClick={onCreateClick}
-              aria-label="创建项目"
+              aria-label={t('创建项目')}
               className="text-foreground"
             >
               <Plus className="h-5 w-5" />
@@ -43,13 +47,13 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
             variant="ghost"
             size="iconSm"
             onClick={() => window.dispatchEvent(new Event(ONBOARDING_OPEN_EVENT))}
-            aria-label="查看功能引导"
-            title="功能引导"
+            aria-label={t('查看功能引导')}
+            title={t('功能引导')}
             className="text-muted-foreground"
           >
             <CircleHelp className="h-4 w-4" />
           </Button>
-          <Link to="/me" aria-label="我的" className="ml-1 flex items-center gap-2">
+          <Link to="/me" aria-label={t('我的')} className="ml-1 flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src={avatarUrl} alt={displayName} />
               <AvatarFallback>{initials}</AvatarFallback>
@@ -63,7 +67,7 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
               await logout();
               navigate('/login', { replace: true });
             }}
-            aria-label="退出登录"
+            aria-label={t('退出登录')}
             className="text-muted-foreground"
           >
             <LogOut className="h-4 w-4" />

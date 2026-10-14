@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -5,15 +6,14 @@ import { Minus, Plus, Search } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { DirectoryTabs } from '@/components/layout/DirectoryTabs';
 import { MemberCard } from '@/components/members/MemberCard';
+import { MemberCategoryFilter } from '@/components/members/MemberCategoryFilter';
+import { MemberEmptyState } from '@/components/members/MemberEmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoriteMembers } from '@/hooks/useFavoriteMembers';
 import { useMembersDirectory } from '@/hooks/useMembersDirectory';
-import {
-  getMemberMeta,
-  MEMBER_AREAS,
-  MEMBER_NAME_ORDER,
-} from '@/lib/memberDirectory';
+import { sortMembers } from '@/lib/memberDirectory';
+import { ALL_MEMBERS_CATEGORY_ID, matchesMemberCategories } from '@/lib/memberCategories';
 import { cn } from '@/lib/utils';
 
 interface MemberViewTransition {
@@ -24,11 +24,10 @@ type TransitionDocument = Document & {
   startViewTransition?: (update: () => void) => MemberViewTransition;
 };
 
-type MemberArea = Exclude<(typeof MEMBER_AREAS)[number], '全部'>;
-
 export function MembersPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
-  const [activeAreas, setActiveAreas] = useState<MemberArea[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([ALL_MEMBERS_CATEGORY_ID]);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
   const { data: members = [], isLoading, error } = useMembersDirectory();
   const {
@@ -36,7 +35,7 @@ export function MembersPage() {
     isLoading: favoritesLoading,
     pendingId,
     toggleFavorite,
-  } = useFavoriteMembers(user?.$id);
+  } = useFavoriteMembers(user?.$id, members);
 
   const changeViewMode = (nextMode: 'cards' | 'compact') => {
     if (nextMode === viewMode) return;
@@ -63,20 +62,8 @@ export function MembersPage() {
   };
 
   const visibleMembers = useMemo(() => {
-    return members
-      .filter(({ profile }) => {
-        if (activeAreas.length === 0) return true;
-        const memberAreas = getMemberMeta(profile.$id).areas;
-        return activeAreas.some((area) => memberAreas.includes(area));
-      })
-      .sort((a, b) => {
-        const aIndex = MEMBER_NAME_ORDER.indexOf(a.profile.name as (typeof MEMBER_NAME_ORDER)[number]);
-        const bIndex = MEMBER_NAME_ORDER.indexOf(b.profile.name as (typeof MEMBER_NAME_ORDER)[number]);
-        const aRank = aIndex < 0 ? Number.MAX_SAFE_INTEGER : aIndex;
-        const bRank = bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex;
-        return aRank - bRank || a.profile.name.localeCompare(b.profile.name);
-      });
-  }, [activeAreas, members]);
+    return sortMembers(members.filter((member) => matchesMemberCategories(member, selectedCategoryIds)));
+  }, [selectedCategoryIds, members]);
 
   return (
     <AppShell showCreate={false}>
@@ -84,20 +71,21 @@ export function MembersPage() {
       <div className="mx-auto max-w-6xl px-4 pb-10 pt-4 sm:pt-5">
         <header className="flex items-center justify-between gap-3 border-b pb-4">
           <div className="font-mono text-xs text-muted-foreground">
-            {String(members.length).padStart(2, '0')} MEMBERS
+            {!selectedCategoryIds.includes(ALL_MEMBERS_CATEGORY_ID) && `${String(visibleMembers.length).padStart(2, '0')} / `}
+            {String(members.length).padStart(2, '0')} {t('成员')}
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <div
               data-onboarding="member-density"
               className="flex items-center rounded-full border p-0.5"
               role="group"
-              aria-label="成员卡片显示方式"
+              aria-label={t('成员卡片显示方式')}
             >
               <button
                 type="button"
                 onClick={() => changeViewMode('compact')}
-                aria-label="收缩为条状视图"
-                title="收缩为条状视图"
+                aria-label={t('收缩为条状视图')}
+                title={t('收缩为条状视图')}
                 aria-pressed={viewMode === 'compact'}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -111,8 +99,8 @@ export function MembersPage() {
               <button
                 type="button"
                 onClick={() => changeViewMode('cards')}
-                aria-label="展开为卡片视图"
-                title="展开为卡片视图"
+                aria-label={t('展开为卡片视图')}
+                title={t('展开为卡片视图')}
                 aria-pressed={viewMode === 'cards'}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -127,8 +115,8 @@ export function MembersPage() {
             <Link
               data-onboarding="member-search"
               to="/members/search"
-              aria-label="搜索成员"
-              title="搜索成员"
+              aria-label={t('搜索成员')}
+              title={t('搜索成员')}
               className="flex h-9 w-9 items-center justify-center rounded-full border text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Search className="h-4 w-4" />
@@ -136,51 +124,25 @@ export function MembersPage() {
           </div>
         </header>
 
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 py-5" aria-label="按学科筛选">
-          {MEMBER_AREAS.map((area) => {
-            const isAll = area === '全部';
-            const active = isAll
-              ? activeAreas.length === 0
-              : activeAreas.includes(area);
-            return (
-              <button
-                key={area}
-                type="button"
-                onClick={() => {
-                  if (isAll) {
-                    setActiveAreas([]);
-                    return;
-                  }
-                  setActiveAreas((current) =>
-                    current.includes(area)
-                      ? current.filter((item) => item !== area)
-                      : [...current, area],
-                  );
-                }}
-                aria-pressed={active}
-                className={cn(
-                  'h-8 shrink-0 rounded-full border px-3 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  active
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground',
-                )}
-              >
-                {area}
-              </button>
-            );
-          })}
-        </div>
+        <MemberCategoryFilter
+          members={members}
+          selectedIds={selectedCategoryIds}
+          onChange={setSelectedCategoryIds}
+          showSelections
+        />
 
-        {isLoading ? (
+        {selectedCategoryIds.length === 0 ? (
+          <MemberEmptyState kind="unselected" onShowAll={() => setSelectedCategoryIds([ALL_MEMBERS_CATEGORY_ID])} />
+        ) : isLoading ? (
           <MembersSkeleton compact={viewMode === 'compact'} />
         ) : error ? (
-          <div className="border-y py-14 text-center text-sm text-muted-foreground">
-            成员资料暂时无法加载
-          </div>
+          <div className="border-y py-14 text-center text-sm text-muted-foreground">{t('成员资料暂时无法加载')}</div>
         ) : visibleMembers.length === 0 ? (
-          <div className="border-y py-14 text-center text-sm text-muted-foreground">
-            这个方向暂时还没有成员
-          </div>
+          <MemberEmptyState
+            kind={selectedCategoryIds.length > 1 ? 'no-combination' : 'no-results'}
+            onReset={() => setSelectedCategoryIds([])}
+            onShowAll={() => setSelectedCategoryIds([ALL_MEMBERS_CATEGORY_ID])}
+          />
         ) : (
           <div
             className={cn(
@@ -190,13 +152,13 @@ export function MembersPage() {
                 : 'gap-5 sm:grid-cols-2 lg:grid-cols-3',
             )}
           >
-            {visibleMembers.map(({ profile, projects }, index) => (
+            {visibleMembers.map(({ profile, projects, meta }, index) => (
               <MemberCard
                 key={profile.$id}
                 index={index}
                 profile={profile}
                 projects={projects}
-                meta={getMemberMeta(profile.$id)}
+                meta={meta}
                 compact={viewMode === 'compact'}
                 favorite={favoriteSet.has(profile.$id)}
                 favoritePending={favoritesLoading || pendingId !== null}
