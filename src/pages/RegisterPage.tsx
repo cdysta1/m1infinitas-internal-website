@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -7,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { InviteCodeError } from '@/services/auth';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 export function RegisterPage() {
+  const { t, errorText } = useI18n();
   const { register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -44,14 +47,14 @@ export function RegisterPage() {
         name: form.name.trim(),
         wechat: form.wechat.trim(),
       });
-      toast.success('注册成功，欢迎来到 M1');
+      toast.success(t('注册成功，欢迎来到 M1'));
       navigate('/', { replace: true });
     } catch (err) {
       console.error('[register] failed', err);
       if (err instanceof InviteCodeError) {
-        toast.error('邀请码不正确，请向管理员索取');
+        toast.error(t('邀请码不正确，请向管理员索取'));
       } else {
-        toast.error((err as Error).message || '注册失败');
+        toast.error(errorText(err, '注册失败'));
       }
     } finally {
       setPending(false);
@@ -60,25 +63,24 @@ export function RegisterPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col justify-center bg-background px-6 py-12">
+      <div className="absolute right-4 top-4"><LanguageSwitcher /></div>
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
             M1 Infinitas
           </div>
-          <h1 className="mt-2 text-xl font-semibold tracking-tight">注册</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            仅限内部成员，需邀请码
-          </p>
+          <h1 className="mt-2 text-xl font-semibold tracking-tight">{t('注册')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('仅限内部成员，需邀请码')}</p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="invite">邀请码</Label>
+            <Label htmlFor="invite">{t('邀请码')}</Label>
             <Input
               id="invite"
               value={form.inviteCode}
               onChange={setField('inviteCode')}
-              placeholder="向管理员索取"
+              placeholder={t('向管理员索取')}
               autoComplete="off"
               disabled={pending}
               required
@@ -86,7 +88,7 @@ export function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="email">邮箱</Label>
+            <Label htmlFor="email">{t('邮箱')}</Label>
             <Input
               id="email"
               type="email"
@@ -101,14 +103,14 @@ export function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">密码</Label>
+            <Label htmlFor="password">{t('密码')}</Label>
             <Input
               id="password"
               type="password"
               autoComplete="new-password"
               value={form.password}
               onChange={setField('password')}
-              placeholder="至少 8 位"
+              placeholder={t('至少 8 位')}
               minLength={8}
               disabled={pending}
               required
@@ -117,24 +119,24 @@ export function RegisterPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="name">昵称</Label>
+              <Label htmlFor="name">{t('昵称')}</Label>
               <Input
                 id="name"
                 value={form.name}
                 onChange={setField('name')}
-                placeholder="你的昵称"
+                placeholder={t('你的昵称')}
                 maxLength={64}
                 disabled={pending}
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="wechat">微信号</Label>
+              <Label htmlFor="wechat">{t('微信号')}</Label>
               <Input
                 id="wechat"
                 value={form.wechat}
                 onChange={setField('wechat')}
-                placeholder="用于内部联系"
+                placeholder={t('用于内部联系')}
                 maxLength={64}
                 disabled={pending}
                 required
@@ -150,20 +152,15 @@ export function RegisterPage() {
           >
             {pending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                注册中…
-              </>
+                <Loader2 className="h-4 w-4 animate-spin" />{t('注册中…')}</>
             ) : (
-              '注册并进入'
+              t('注册并进入')
             )}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          已有账号？{' '}
-          <Link to="/login" className="text-foreground underline underline-offset-4">
-            直接登录
-          </Link>
+        <p className="mt-6 text-center text-xs text-muted-foreground">{t('已有账号？')}{' '}
+          <Link to="/login" className="text-foreground underline underline-offset-4">{t('直接登录')}</Link>
         </p>
       </div>
     </div>

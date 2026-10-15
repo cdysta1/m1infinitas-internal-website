@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -29,6 +30,7 @@ function moveFirstImageToFront(items: PickedImage[]): PickedImage[] {
 }
 
 export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerProps) {
+  const { t, errorText } = useI18n();
   const navigate = useNavigate();
   const createProject = useCreateProject();
   const [title, setTitle] = useState('');
@@ -65,12 +67,12 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
       },
       {
         onSuccess: ({ project }) => {
-          toast.success('已发布');
+          toast.success(t('已发布'));
           onOpenChange(false);
           navigate(`/projects/${project.$id}`);
         },
         onError: (err) => {
-          toast.error(err.message || '发布失败，请重试');
+          toast.error(errorText(err, '发布失败，请重试'));
         },
       },
     );
@@ -80,10 +82,8 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>发布新项目</DrawerTitle>
-          <DrawerDescription>
-            选择图片或视频，再写一段项目介绍
-          </DrawerDescription>
+          <DrawerTitle>{t('发布新项目')}</DrawerTitle>
+          <DrawerDescription>{t('选择图片或视频，再写一段项目介绍')}</DrawerDescription>
         </DrawerHeader>
 
         <div className="space-y-4">
@@ -92,14 +92,14 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
             onChange={(next) => setImages(moveFirstImageToFront(next))}
             disabled={createProject.isPending}
             showFirstAsCover={Boolean(images[0]?.file.type.startsWith('image/'))}
-            hint="至少 1 张图片作为封面；图片与视频合计最多 9 个"
+            hint={t('至少 1 张图片作为封面；图片与视频合计最多 9 个')}
           />
 
           <div className="space-y-1.5">
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="项目标题"
+              placeholder={t('项目标题')}
               maxLength={80}
               disabled={createProject.isPending}
               autoFocus
@@ -107,7 +107,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
             <Textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="项目介绍（最多 500 字）"
+              placeholder={t('项目介绍（最多 500 字）')}
               maxLength={MAX_PROJECT_SUMMARY_LENGTH}
               rows={5}
               disabled={createProject.isPending}
@@ -132,11 +132,9 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
           >
             {createProject.isPending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                发布中…
-              </>
+                <Loader2 className="h-4 w-4 animate-spin" />{t('发布中…')}</>
             ) : (
-              '发布'
+              t('发布')
             )}
           </Button>
         </DrawerFooter>

@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import {
   useEffect,
   useRef,
@@ -42,6 +43,7 @@ export function AppShell({
   footer,
   onSwipeBack,
 }: AppShellProps) {
+  const { t } = useI18n();
   const gestureRef = useRef<SwipeGesture | null>(null);
   const offsetRef = useRef(0);
   const navigationTimerRef = useRef<number | null>(null);
@@ -157,9 +159,7 @@ export function AppShell({
           style={{ opacity: Math.max(0, (swipeProgress - 0.08) * 2.4) }}
           aria-hidden
         >
-          <ArrowLeft className="h-4 w-4" />
-          返回
-        </div>
+          <ArrowLeft className="h-4 w-4" />{t('返回')}</div>
       )}
       <div
         className={cn(

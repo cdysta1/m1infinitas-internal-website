@@ -1,6 +1,7 @@
 import type { Models } from 'appwrite';
 import { account } from '@/lib/appwrite';
 import { env } from '@/lib/env';
+import { updateAccountPreferences } from '@/services/preferences';
 
 const FAVORITE_PROJECT_IDS_KEY = 'favorite_project_ids';
 const DEMO_STORAGE_PREFIX = 'm1-infinitas-favorite-projects-v1';
@@ -47,9 +48,7 @@ export async function saveFavoriteProjectIds(
     return normalized;
   }
 
-  const preferences = await account.getPrefs<FavoritePreferences>();
-  await account.updatePrefs<FavoritePreferences>({
-    ...preferences,
+  await updateAccountPreferences({
     [FAVORITE_PROJECT_IDS_KEY]: normalized,
   });
   return normalized;

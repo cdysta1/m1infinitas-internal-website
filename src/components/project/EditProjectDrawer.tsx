@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, X } from 'lucide-react';
@@ -80,6 +81,7 @@ export function EditProjectDrawer({
   project,
   trigger,
 }: EditProjectDrawerProps) {
+  const { t, errorText } = useI18n();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const initializedProjectRef = useRef<string | null>(null);
@@ -159,7 +161,7 @@ export function EditProjectDrawer({
   const save = async () => {
     if (!canSave || !user) return;
     if (project.owner_id !== user.$id) {
-      toast.error('只能编辑自己发布的项目');
+      toast.error(t('只能编辑自己发布的项目'));
       return;
     }
 
@@ -217,11 +219,11 @@ export function EditProjectDrawer({
         queryClient.invalidateQueries({ queryKey: projectEditorMediaKey(project.$id) }),
       ]);
 
-      toast.success('项目已更新');
+      toast.success(t('项目已更新'));
       setOpen(false);
     } catch (error) {
       await Promise.all(uploadedIds.map((mediaId) => deleteMedia(mediaId)));
-      toast.error((error as Error).message || '项目更新失败');
+      toast.error(errorText(error, '项目更新失败'));
     } finally {
       setSaving(false);
     }
@@ -237,18 +239,16 @@ export function EditProjectDrawer({
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="relative pr-10">
-          <DrawerTitle>编辑项目</DrawerTitle>
-          <DrawerDescription>
-            修改项目文案、图片和视频；第一张图片会作为封面。
-          </DrawerDescription>
+          <DrawerTitle>{t('编辑项目')}</DrawerTitle>
+          <DrawerDescription>{t('修改项目文案、图片和视频；第一张图片会作为封面。')}</DrawerDescription>
           <DrawerClose asChild>
             <Button
               type="button"
               variant="ghost"
               size="iconSm"
               className="absolute right-0 top-0"
-              aria-label="关闭项目编辑"
-              title="关闭"
+              aria-label={t('关闭项目编辑')}
+              title={t('关闭')}
               disabled={saving}
             >
               <X className="h-4 w-4" />
@@ -259,22 +259,20 @@ export function EditProjectDrawer({
         {mediaQuery.isLoading ? (
           <div className="flex min-h-56 items-center justify-center text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="sr-only">正在加载项目资料</span>
+            <span className="sr-only">{t('正在加载项目资料')}</span>
           </div>
         ) : mediaQuery.isError ? (
-          <div className="rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-            项目资料加载失败，请关闭后重试。
-          </div>
+          <div className="rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t('项目资料加载失败，请关闭后重试。')}</div>
         ) : initializedProjectRef.current !== project.$id ? (
           <div className="flex min-h-56 items-center justify-center text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="sr-only">正在整理项目资料</span>
+            <span className="sr-only">{t('正在整理项目资料')}</span>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-4">
-                <Label>现有媒体</Label>
+                <Label>{t('现有媒体')}</Label>
                 <span className="font-mono text-[10px] text-muted-foreground">
                   {totalMedia}/{MAX_IMAGES_PER_POST}
                 </span>
@@ -286,7 +284,7 @@ export function EditProjectDrawer({
                       {asset.kind === 'video' ? (
                         <video
                           src={buildPreviewUrl(asset.id, 'thumb')}
-                          aria-label={`${project.title} 视频 ${index + 1}`}
+                          aria-label={t('{name} 视频 {index}', { name: project.title, index: index + 1 })}
                           className="h-full w-full object-cover"
                           muted
                           playsInline
@@ -295,27 +293,23 @@ export function EditProjectDrawer({
                       ) : (
                         <SmartImage
                           src={buildPreviewUrl(asset.id, 'thumb')}
-                          alt={`${project.title} 图片 ${index + 1}`}
+                          alt={t('{name} 图片 {index}', { name: project.title, index: index + 1 })}
                           wrapperClassName="h-full w-full"
                           imgClassName="object-cover"
                         />
                       )}
                       {index === existingCoverIndex && (
-                        <span className="absolute left-1 top-1 bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
-                          封面
-                        </span>
+                        <span className="absolute left-1 top-1 bg-black/70 px-1.5 py-0.5 text-[10px] text-white">{t('封面')}</span>
                       )}
                       {asset.kind === 'video' && (
-                        <span className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
-                          视频
-                        </span>
+                        <span className="absolute bottom-1 left-1 bg-black/70 px-1.5 py-0.5 text-[10px] text-white">{t('视频')}</span>
                       )}
                       <button
                         type="button"
                         onClick={() => removeExistingImage(index)}
                         disabled={saving}
-                        aria-label={`移除第 ${index + 1} 个媒体`}
-                        title="移除媒体"
+                        aria-label={t('移除第 {index} 个媒体', { index: index + 1 })}
+                        title={t('移除媒体')}
                         className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white [@media(hover:none)]:opacity-100"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -334,17 +328,17 @@ export function EditProjectDrawer({
                   max={MAX_IMAGES_PER_POST - existingMedia.length}
                   disabled={saving}
                   showFirstAsCover={existingCoverIndex < 0 && Boolean(newImages[0]?.file.type.startsWith('image/'))}
-                  hint={`可继续添加 ${MAX_IMAGES_PER_POST - totalMedia} 个媒体；保存后按当前顺序展示`}
+                  hint={t('可继续添加 {count} 个媒体；保存后按当前顺序展示', { count: MAX_IMAGES_PER_POST - totalMedia })}
                 />
               )}
               {!hasCoverImage && (
-                <p className="text-xs text-destructive">项目至少需要保留一张图片作为封面。</p>
+                <p className="text-xs text-destructive">{t('项目至少需要保留一张图片作为封面。')}</p>
               )}
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="edit-project-title">项目名称</Label>
+                <Label htmlFor="edit-project-title">{t('项目名称')}</Label>
                 <Input
                   id="edit-project-title"
                   value={title}
@@ -355,7 +349,7 @@ export function EditProjectDrawer({
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-4">
-                  <Label htmlFor="edit-project-summary">项目介绍</Label>
+                  <Label htmlFor="edit-project-summary">{t('项目介绍')}</Label>
                   <span className="font-mono text-[10px] text-muted-foreground">
                     {summary.length}/{MAX_PROJECT_SUMMARY_LENGTH}
                   </span>
@@ -378,11 +372,9 @@ export function EditProjectDrawer({
           <Button size="lg" className="w-full" onClick={() => void save()} disabled={!canSave}>
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                保存中…
-              </>
+                <Loader2 className="h-4 w-4 animate-spin" />{t('保存中…')}</>
             ) : (
-              '保存修改'
+              t('保存修改')
             )}
           </Button>
         </DrawerFooter>

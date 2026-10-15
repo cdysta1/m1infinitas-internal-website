@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +16,7 @@ interface SmartImageProps {
 // cookie issues); without onError the box would sit silently blank, so we surface
 // an explicit "加载失败" state instead.
 export function SmartImage({ src, alt, wrapperClassName, imgClassName }: SmartImageProps) {
+  const { t } = useI18n();
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -38,9 +40,7 @@ export function SmartImage({ src, alt, wrapperClassName, imgClassName }: SmartIm
         <div className="absolute inset-0 animate-pulse bg-muted" aria-hidden />
       )}
       {failed && (
-        <div className="absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-foreground">
-          图片加载失败
-        </div>
+        <div className="absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-foreground">{t('图片加载失败')}</div>
       )}
     </div>
   );

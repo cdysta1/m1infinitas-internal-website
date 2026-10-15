@@ -1,9 +1,11 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, Camera, Heart, LogOut, Pencil } from 'lucide-react';
+import { ArrowLeft, Loader2, Camera, LogOut, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { SmartImage } from '@/components/common/SmartImage';
+import { FavoriteButton } from '@/components/common/FavoriteButton';
 import { AppShell } from '@/components/layout/AppShell';
 import { EditProjectDrawer } from '@/components/project/EditProjectDrawer';
 import { Button } from '@/components/ui/button';
@@ -19,11 +21,13 @@ import { getProject } from '@/services/projects';
 import { updateProfile } from '@/services/profiles';
 import { uploadMedia } from '@/services/storage';
 import { buildPreviewUrl, getAvatarUrl } from '@/lib/media';
-import { getMemberMeta } from '@/lib/memberDirectory';
 import { requestGalleryScrollRestore } from '@/lib/galleryScroll';
-import { cn, formatRelativeTime } from '@/lib/utils';
+import { formatRelativeTime } from '@/lib/utils';
+import { translateMemberLabel } from '@/i18n/memberLabels';
 
 export function MePage() {
+  const { t, language, errorText } = useI18n();
+  const labelFor = (value: string) => translateMemberLabel(language, value);
   const { user, profile, refreshProfile, logout } = useAuth();
   const navigate = useNavigate();
   const returnToGallery = () => {
@@ -36,7 +40,7 @@ export function MePage() {
     isLoading: favoriteMembersLoading,
     pendingId: pendingMemberId,
     toggleFavorite: toggleFavoriteMember,
-  } = useFavoriteMembers(user?.$id);
+  } = useFavoriteMembers(user?.$id, members);
   const {
     favoriteIds: favoriteProjectIds,
     isLoading: favoriteProjectsLoading,
@@ -87,7 +91,7 @@ export function MePage() {
   if (!user) {
     return (
       <AppShell showCreate={false} onSwipeBack={returnToGallery}>
-        <div className="p-8 text-center text-sm text-muted-foreground">未登录</div>
+        <div className="p-8 text-center text-sm text-muted-foreground">{t('未登录')}</div>
       </AppShell>
     );
   }
@@ -100,7 +104,7 @@ export function MePage() {
     e.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('请选择图片');
+      toast.error(t('请选择图片'));
       return;
     }
     setUploadingAvatar(true);
@@ -108,9 +112,9 @@ export function MePage() {
       const uploaded = await uploadMedia(file, user.$id);
       await updateProfile(user.$id, { avatar_file_id: uploaded.fileId });
       await refreshProfile();
-      toast.success('头像已更新');
+      toast.success(t('头像已更新'));
     } catch (err) {
-      toast.error((err as Error).message || '头像上传失败');
+      toast.error(errorText(err, '头像上传失败'));
     } finally {
       setUploadingAvatar(false);
     }
@@ -119,7 +123,7 @@ export function MePage() {
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !wechat.trim()) {
-      toast.error('昵称和微信号必填');
+      toast.error(t('昵称和微信号必填'));
       return;
     }
     setSaving(true);
@@ -129,9 +133,9 @@ export function MePage() {
         wechat: wechat.trim(),
       });
       await refreshProfile();
-      toast.success('已保存');
+      toast.success(t('已保存'));
     } catch (err) {
-      toast.error((err as Error).message || '保存失败');
+      toast.error(errorText(err, '保存失败'));
     } finally {
       setSaving(false);
     }
@@ -152,16 +156,14 @@ export function MePage() {
             onClick={returnToGallery}
             className="-ml-3 gap-2 text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />
-            返回首页
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('返回首页')}</Button>
         </div>
         <div className="mb-6 flex flex-col items-center">
           <button
             type="button"
             onClick={() => avatarInputRef.current?.click()}
             className="group relative"
-            aria-label="更换头像"
+            aria-label={t('更换头像')}
             disabled={uploadingAvatar}
           >
             <Avatar className="h-20 w-20">
@@ -188,7 +190,7 @@ export function MePage() {
 
         <form onSubmit={onSave} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="me-name">昵称</Label>
+            <Label htmlFor="me-name">{t('昵称')}</Label>
             <Input
               id="me-name"
               value={name}
@@ -199,7 +201,7 @@ export function MePage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="me-wechat">微信号</Label>
+            <Label htmlFor="me-wechat">{t('微信号')}</Label>
             <Input
               id="me-wechat"
               value={wechat}
@@ -218,34 +220,28 @@ export function MePage() {
           >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                保存中…
-              </>
+                <Loader2 className="h-4 w-4 animate-spin" />{t('保存中…')}</>
             ) : (
-              '保存'
+              t('保存')
             )}
           </Button>
         </form>
 
         <section className="mt-10 border-t pt-6" aria-labelledby="published-projects-heading">
           <div className="flex items-baseline justify-between gap-4">
-            <h2 id="published-projects-heading" className="text-base font-semibold">
-              发布项目
-            </h2>
+            <h2 id="published-projects-heading" className="text-base font-semibold">{t('已发布项目')}</h2>
             <span className="font-mono text-[10px] text-muted-foreground">
-              {String(ownedProjects.length).padStart(2, '0')} PROJECTS
+              {String(ownedProjects.length).padStart(2, '0')} {t('项目')}
             </span>
           </div>
 
           {ownedProjectsLoading ? (
             <div className="flex items-center justify-center py-10 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="sr-only">正在加载发布项目</span>
+              <span className="sr-only">{t('正在加载发布项目')}</span>
             </div>
           ) : ownedProjects.length === 0 ? (
-            <div className="mt-4 rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-              还没有发布项目
-            </div>
+            <div className="mt-4 rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t('还没有发布项目')}</div>
           ) : (
             <div className="mt-3 divide-y border-y">
               {ownedProjects.map((project) => (
@@ -269,8 +265,7 @@ export function MePage() {
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
                       {project.summary}
                     </p>
-                    <p className="mt-1 font-mono text-[9px] uppercase text-muted-foreground/70">
-                      更新于 {formatRelativeTime(project.updated_at)}
+                    <p className="mt-1 font-mono text-[9px] uppercase text-muted-foreground/70">{t('更新于 {time}', { time: formatRelativeTime(project.updated_at, language) })}
                     </p>
                   </Link>
                   <EditProjectDrawer
@@ -279,8 +274,8 @@ export function MePage() {
                       <button
                         type="button"
                         data-onboarding="edit-project"
-                        aria-label={`编辑项目 ${project.title}`}
-                        title="编辑项目"
+                        aria-label={t('编辑项目 {name}', { name: project.title })}
+                        title={t('编辑项目')}
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-[border-color,color,transform] hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90"
                       >
                         <Pencil className="h-4 w-4" />
@@ -295,23 +290,19 @@ export function MePage() {
 
         <section className="mt-10 border-t pt-6" aria-labelledby="favorite-projects-heading">
           <div className="flex items-baseline justify-between gap-4">
-            <h2 id="favorite-projects-heading" className="text-base font-semibold">
-              收藏项目
-            </h2>
+            <h2 id="favorite-projects-heading" className="text-base font-semibold">{t('已收藏项目')}</h2>
             <span className="font-mono text-[10px] text-muted-foreground">
-              {String(favoriteProjects.length).padStart(2, '0')} PROJECTS
+              {String(favoriteProjects.length).padStart(2, '0')} {t('项目')}
             </span>
           </div>
 
           {favoriteProjectsLoading || favoriteProjectDetailsLoading ? (
             <div className="flex items-center justify-center py-10 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="sr-only">正在加载收藏项目</span>
+              <span className="sr-only">{t('正在加载收藏项目')}</span>
             </div>
           ) : favoriteProjects.length === 0 ? (
-            <div className="mt-4 rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-              还没有收藏项目
-            </div>
+            <div className="mt-4 rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t('还没有收藏项目')}</div>
           ) : (
             <div className="mt-3 divide-y border-y">
               {favoriteProjects.map((project) => (
@@ -335,24 +326,17 @@ export function MePage() {
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
                       {project.summary}
                     </p>
-                    <p className="mt-1 font-mono text-[9px] uppercase text-muted-foreground/70">
-                      更新于 {formatRelativeTime(project.updated_at)}
+                    <p className="mt-1 font-mono text-[9px] uppercase text-muted-foreground/70">{t('更新于 {time}', { time: formatRelativeTime(project.updated_at, language) })}
                     </p>
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => void toggleFavoriteProject(project.$id)}
+                  <FavoriteButton
+                    favorite
+                    onToggle={() => void toggleFavoriteProject(project.$id)}
                     disabled={pendingProjectId !== null}
-                    aria-label={`取消收藏项目 ${project.title}`}
-                    title={`取消收藏项目 ${project.title}`}
-                    aria-pressed="true"
-                    className={cn(
-                      'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground bg-foreground text-background transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90',
-                      pendingProjectId !== null && 'cursor-wait opacity-50',
-                    )}
-                  >
-                    <Heart className="h-4 w-4 fill-current" />
-                  </button>
+                    aria-label={t('取消收藏项目 {name}', { name: project.title })}
+                    title={t('取消收藏项目 {name}', { name: project.title })}
+                    className="h-9 w-9"
+                  />
                 </article>
               ))}
             </div>
@@ -361,27 +345,22 @@ export function MePage() {
 
         <section className="mt-10 border-t pt-6" aria-labelledby="favorite-members-heading">
           <div className="flex items-baseline justify-between gap-4">
-            <h2 id="favorite-members-heading" className="text-base font-semibold">
-              收藏成员
-            </h2>
+            <h2 id="favorite-members-heading" className="text-base font-semibold">{t('收藏成员')}</h2>
             <span className="font-mono text-[10px] text-muted-foreground">
-              {String(favoriteMembers.length).padStart(2, '0')} PEOPLE
+              {String(favoriteMembers.length).padStart(2, '0')} {t('成员')}
             </span>
           </div>
 
           {membersLoading || favoriteMembersLoading ? (
             <div className="flex items-center justify-center py-10 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="sr-only">正在加载收藏成员</span>
+              <span className="sr-only">{t('正在加载收藏成员')}</span>
             </div>
           ) : favoriteMembers.length === 0 ? (
-            <div className="mt-4 rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-              还没有收藏成员
-            </div>
+            <div className="mt-4 rounded-sm border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t('还没有收藏成员')}</div>
           ) : (
             <div className="mt-3 divide-y border-y">
-              {favoriteMembers.map(({ profile: memberProfile }) => {
-                const meta = getMemberMeta(memberProfile.$id);
+              {favoriteMembers.map(({ profile: memberProfile, meta }) => {
                 return (
                   <article key={memberProfile.$id} className="flex items-center gap-3 py-3">
                     <SmartImage
@@ -392,29 +371,23 @@ export function MePage() {
                     />
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-sm font-semibold">{memberProfile.name}</h3>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta.focus}</p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{labelFor(meta.focus)}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {meta.tags.slice(0, 2).map((tag) => (
-                          <span key={tag} className="rounded-full bg-muted px-2 py-1 text-[10px] leading-none">
-                            {tag}
+                          <span key={tag} className="max-w-full break-words rounded-full bg-muted px-2 py-1 text-[10px] leading-snug">
+                            {labelFor(tag)}
                           </span>
                         ))}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => void toggleFavoriteMember(memberProfile.$id)}
+                    <FavoriteButton
+                      favorite
+                      onToggle={() => void toggleFavoriteMember(memberProfile.$id)}
                       disabled={pendingMemberId !== null}
-                      aria-label={`取消收藏 ${memberProfile.name}`}
-                      title={`取消收藏 ${memberProfile.name}`}
-                      aria-pressed="true"
-                      className={cn(
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground bg-foreground text-background transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90',
-                        pendingMemberId !== null && 'cursor-wait opacity-50',
-                      )}
-                    >
-                      <Heart className="h-4 w-4 fill-current" />
-                    </button>
+                      aria-label={t('取消收藏 {name}', { name: memberProfile.name })}
+                      title={t('取消收藏 {name}', { name: memberProfile.name })}
+                      className="h-9 w-9"
+                    />
                   </article>
                 );
               })}
@@ -432,9 +405,7 @@ export function MePage() {
               navigate('/login', { replace: true });
             }}
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            退出登录
-          </Button>
+            <LogOut className="mr-2 h-4 w-4" />{t('退出登录')}</Button>
         </div>
       </div>
 

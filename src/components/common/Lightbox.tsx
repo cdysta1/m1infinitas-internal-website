@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ interface LightboxProps {
 
 // Fullscreen image viewer with prev/next and ESC/backdrop close.
 export function Lightbox({ sources, index, onClose, onIndexChange }: LightboxProps) {
+  const { t } = useI18n();
   const clamp = useCallback(
     (n: number) => Math.max(0, Math.min(sources.length - 1, n)),
     [sources.length],
@@ -42,7 +44,7 @@ export function Lightbox({ sources, index, onClose, onIndexChange }: LightboxPro
       <button
         type="button"
         onClick={onClose}
-        aria-label="关闭"
+        aria-label={t('关闭')}
         className="absolute right-3 top-3 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
       >
         <X className="h-5 w-5" />
@@ -52,7 +54,7 @@ export function Lightbox({ sources, index, onClose, onIndexChange }: LightboxPro
         <>
           <button
             type="button"
-            aria-label="上一张"
+            aria-label={t('上一张')}
             onClick={(e) => {
               e.stopPropagation();
               onIndexChange(clamp(index - 1));
@@ -63,7 +65,7 @@ export function Lightbox({ sources, index, onClose, onIndexChange }: LightboxPro
           </button>
           <button
             type="button"
-            aria-label="下一张"
+            aria-label={t('下一张')}
             onClick={(e) => {
               e.stopPropagation();
               onIndexChange(clamp(index + 1));

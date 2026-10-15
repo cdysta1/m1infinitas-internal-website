@@ -1,9 +1,11 @@
+import { useI18n } from '@/app/I18nProvider';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Heart, Loader2 } from 'lucide-react';
+import { ArrowUpRight, Loader2 } from 'lucide-react';
 import { buildPreviewUrl, getAvatarUrl } from '@/lib/media';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SmartImage } from '@/components/common/SmartImage';
+import { FavoriteButton } from '@/components/common/FavoriteButton';
 import type { Profile, Project } from '@/types/models';
 
 interface ProjectCardProps {
@@ -26,10 +28,11 @@ export function ProjectCard({
   favoritePending = false,
   onFavoriteToggle,
 }: ProjectCardProps) {
+  const { t, language } = useI18n();
   const coverUrl = project.cover_file_id
     ? buildPreviewUrl(project.cover_file_id, 'cover')
     : undefined;
-  const ownerName = owner?.name ?? '匿名';
+  const ownerName = owner?.name ?? t('匿名');
   const avatarUrl = getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
   const initials = ownerName.slice(0, 1).toUpperCase() || '?';
 
@@ -58,14 +61,12 @@ export function ProjectCard({
               {pending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <span className="text-xs">无封面</span>
+                <span className="text-xs">{t('无封面')}</span>
               )}
             </div>
           )}
           {failed && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs font-medium text-white">
-              发布失败，请重试
-            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs font-medium text-white">{t('发布失败，请重试')}</div>
           )}
           {!failed && !pending && (
             <div
@@ -82,11 +83,9 @@ export function ProjectCard({
                   '-translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0',
                 )}
               >
-                <span className="rounded-full border border-white/30 bg-black/20 px-2 py-1 font-mono text-[9px] uppercase leading-none">
-                  项目详情
-                </span>
+                <span className="rounded-full border border-white/30 bg-black/20 px-2 py-1 font-mono text-[9px] uppercase leading-none">{t('项目详情')}</span>
                 <span className="shrink-0 text-[10px] text-white/70">
-                  {formatRelativeTime(project.updated_at)}
+                  {formatRelativeTime(project.updated_at, language)}
                 </span>
               </div>
 
@@ -99,9 +98,7 @@ export function ProjectCard({
                 <p className="line-clamp-4 text-xs font-medium leading-5 sm:text-[13px]">
                   {project.summary}
                 </p>
-                <div className="mt-2 flex items-center justify-end gap-1 text-[10px] font-medium text-white">
-                  查看项目
-                  <ArrowUpRight className="h-3 w-3" />
+                <div className="mt-2 flex items-center justify-end gap-1 text-[10px] font-medium text-white">{t('查看项目')}<ArrowUpRight className="h-3 w-3" />
                 </div>
               </div>
             </div>
@@ -123,29 +120,15 @@ export function ProjectCard({
             </h3>
           </Link>
           {onFavoriteToggle && (
-            <button
-              type="button"
+            <FavoriteButton
               data-onboarding="favorite-project"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                onFavoriteToggle();
-              }}
+              favorite={favorite}
+              onToggle={onFavoriteToggle}
               disabled={favoritePending || pending}
-              aria-label={`${favorite ? '取消收藏项目' : '收藏项目'} ${project.title}`}
-              title={favorite ? '取消收藏项目' : '收藏项目'}
-              aria-pressed={favorite}
-              className={cn(
-                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-[background-color,color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90',
-                favorite
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground',
-                (favoritePending || pending) && 'cursor-wait opacity-50',
-              )}
-            >
-              <Heart className={cn('h-3.5 w-3.5', favorite && 'fill-current')} />
-            </button>
+              aria-label={`${favorite ? t('取消收藏项目') : t('收藏项目')} ${project.title}`}
+              title={favorite ? t('取消收藏项目') : t('收藏项目')}
+              iconClassName="h-3.5 w-3.5"
+            />
           )}
         </div>
         <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -155,7 +138,7 @@ export function ProjectCard({
           </Avatar>
           <span className="max-w-[7rem] truncate">{ownerName}</span>
           <span aria-hidden>·</span>
-          <span className="shrink-0">{formatRelativeTime(project.updated_at)}</span>
+          <span className="min-w-0 truncate">{formatRelativeTime(project.updated_at, language)}</span>
         </div>
       </div>
     </article>

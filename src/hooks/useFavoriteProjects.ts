@@ -1,3 +1,4 @@
+import { useI18n } from '@/app/I18nProvider';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -6,6 +7,7 @@ import {
 } from '@/services/projectFavorites';
 
 export function useFavoriteProjects(userId?: string) {
+  const { t } = useI18n();
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(Boolean(userId));
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function useFavoriteProjects(userId?: string) {
         setFavoriteIds(ids);
       })
       .catch(() => {
-        if (!cancelled) toast.error('收藏项目加载失败');
+        if (!cancelled) toast.error(t('收藏项目加载失败'));
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -62,12 +64,12 @@ export function useFavoriteProjects(userId?: string) {
       } catch {
         favoriteIdsRef.current = previous;
         setFavoriteIds(previous);
-        toast.error('项目收藏状态保存失败');
+        toast.error(t('项目收藏状态保存失败'));
       } finally {
         setPendingId(null);
       }
     },
-    [pendingId, userId],
+    [pendingId, userId, t],
   );
 
   return {
