@@ -46,46 +46,20 @@ function normalizeName(value: string): string {
 }
 
 export function buildMembersDirectory(profiles: Profile[], projects: Project[]): MemberDirectoryEntry[] {
-  const projectsByOwner = new Map<string, Project[]>();
-  projects.forEach((project) => {
-    const owned = projectsByOwner.get(project.owner_id) ?? [];
-    owned.push(project);
-    projectsByOwner.set(project.owner_id, owned);
-  });
-
-  const matchedAccountIds = new Set<string>();
-  const members: MemberDirectoryEntry[] = MEMBER_ROSTER.map((record) => {
-    const names = new Set([record.name, ...record.aliases].map(normalizeName));
-    const candidates = profiles.filter((profile) => names.has(normalizeName(profile.name)));
-    const account = candidates.length === 1 ? candidates[0] : undefined;
-    if (account) matchedAccountIds.add(account.$id);
-
-    return {
-      // Roster identities stay stable when members register or change their avatar.
-      profile: {
-        $id: record.id,
-        name: record.name,
-        wechat: account?.wechat ?? '',
-        avatar_file_id: account?.avatar_file_id,
-      },
-      meta: record,
-      aliases: record.aliases,
-      projects: account ? projectsByOwner.get(account.$id) ?? [] : [],
-      accountId: account?.$id,
-      priority: record.priority,
-    };
-  });
-
-  profiles.forEach((profile) => {
-    if (matchedAccountIds.has(profile.$id)) return;
-    members.push({
-      profile,
-      meta: { focus: '', description: '', tags: [], areas: [], contacts: [] },
-      aliases: [],
-      projects: projectsByOwner.get(profile.$id) ?? [],
-      accountId: profile.$id,
-    });
-  });
+  // Hide all real-time data from Appwrite, use only hardcoded roster
+  const members: MemberDirectoryEntry[] = MEMBER_ROSTER.map((record) => ({
+    profile: {
+      $id: record.id,
+      name: record.name,
+      wechat: '',
+      avatar_file_id: undefined,
+    },
+    meta: record,
+    aliases: record.aliases,
+    projects: [],
+    accountId: undefined,
+    priority: record.priority,
+  }));
 
   return members;
 }
