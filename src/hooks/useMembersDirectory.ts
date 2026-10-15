@@ -12,15 +12,8 @@ export function useMembersDirectory() {
   return useQuery<MemberDirectoryEntry[], Error>({
     queryKey: membersDirectoryKey,
     queryFn: async () => {
-      const [profiles, projectResult] = await Promise.all([
-        listProfiles(100),
-        listProjects({ limit: 100 }),
-      ]);
-
-      const directoryProfiles = env.demoMode
-        ? profiles.filter((profile) => !profile.$id.startsWith('demo-user-'))
-        : profiles;
-      return buildMembersDirectory(directoryProfiles, projectResult.projects);
+      // Skip real-time data fetching, use only hardcoded roster
+      return buildMembersDirectory([], []);
     },
   });
 }
