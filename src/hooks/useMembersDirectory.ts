@@ -1,8 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { listProfiles } from '@/services/profiles';
-import { listProjects } from '@/services/projects';
 import { buildMembersDirectory, type MemberDirectoryEntry } from '@/lib/memberDirectory';
-import { env } from '@/lib/env';
 
 export type { MemberDirectoryEntry } from '@/lib/memberDirectory';
 
@@ -13,7 +10,7 @@ export function useMembersDirectory() {
     queryKey: membersDirectoryKey,
     queryFn: async () => {
       // Skip real-time data fetching, use only hardcoded roster
-      return buildMembersDirectory([], []);
+      return buildMembersDirectory();
     },
   });
 }

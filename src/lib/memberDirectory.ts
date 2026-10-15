@@ -41,11 +41,7 @@ export const MEMBER_AREAS = [
 
 const memberNameCollator = new Intl.Collator('zh-CN-u-co-pinyin');
 
-function normalizeName(value: string): string {
-  return value.normalize('NFC').trim().toLocaleLowerCase();
-}
-
-export function buildMembersDirectory(profiles: Profile[], projects: Project[]): MemberDirectoryEntry[] {
+export function buildMembersDirectory(): MemberDirectoryEntry[] {
   // Hide all real-time data from Appwrite, use only hardcoded roster
   const members: MemberDirectoryEntry[] = MEMBER_ROSTER.map((record) => ({
     profile: {
