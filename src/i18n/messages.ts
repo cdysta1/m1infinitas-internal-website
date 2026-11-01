@@ -73,7 +73,6 @@ export const EN_MESSAGES: Record<string, string> = {
   '搜索成员': 'Search members',
   '成员资料暂时无法加载': 'Member details are temporarily unavailable.',
   '选择一个分类': 'Choose a category',
-  '在人的疆域上': 'In the realm of people',
   '这里，暂时留白': 'A little space, for now',
   '暂时没有符合这些条件的成员。': 'No members match these filters yet.',
   '这里，尚无交集': 'No overlap yet',

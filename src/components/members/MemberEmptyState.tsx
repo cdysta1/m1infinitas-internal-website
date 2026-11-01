@@ -25,11 +25,12 @@ export function MemberEmptyState({ kind, onShowAll, onReset }: MemberEmptyStateP
       <h2 id={titleId} className="text-xl font-medium leading-snug sm:text-[22px]">
         {unselected ? t('选择一个分类') : combination ? t('这里，尚无交集') : t('这里，暂时留白')}
       </h2>
-      <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">
-        {unselected ? t('在人的疆域上') : combination
-          ? t('暂时没有同时符合这些标签的成员，试着减少一个标签。')
-          : t('暂时没有符合这些条件的成员。')}
-      </p>
+      {!unselected && (
+        <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">
+          {combination ? t('暂时没有同时符合这些标签的成员，试着减少一个标签。')
+            : t('暂时没有符合这些条件的成员。')}
+        </p>
+      )}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
         {!unselected && onReset && (
           <button

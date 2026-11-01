@@ -59,7 +59,7 @@ const bundle = await build({
 });
 const model = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`);
 assert.equal(model.translate('en', '选择一个分类'), 'Choose a category');
-assert.equal(model.translate('zh', '在人的疆域上'), '在人的疆域上');
+assert.equal(model.translate('zh', '选择一个分类'), '选择一个分类');
 assert.equal(model.translate('en', '移除第 {index} 个媒体', { index: 3 }), 'Remove media 3');
 assert.equal(model.translate('en', 'constructor'), 'constructor');
 assert.equal(model.translateMemberLabel('en', 'constructor'), 'constructor');
