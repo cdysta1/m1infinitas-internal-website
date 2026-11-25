@@ -23,6 +23,7 @@ export const env = {
     databaseId: read('VITE_APPWRITE_DATABASE_ID', demoMode ? 'demo' : undefined),
     bucketId: read('VITE_APPWRITE_BUCKET_ID', demoMode ? 'demo' : undefined),
     collections: {
+      members: read('VITE_APPWRITE_COLLECTION_MEMBERS', 'members'),
       profiles: read('VITE_APPWRITE_COLLECTION_PROFILES', 'profiles'),
       projects: read('VITE_APPWRITE_COLLECTION_PROJECTS', 'projects'),
       updates: read('VITE_APPWRITE_COLLECTION_UPDATES', 'updates'),

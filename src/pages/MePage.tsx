@@ -1,7 +1,7 @@
 import { useI18n } from '@/app/I18nProvider';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Loader2, Camera, LogOut, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { SmartImage } from '@/components/common/SmartImage';
@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoriteMembers } from '@/hooks/useFavoriteMembers';
 import { useFavoriteProjects } from '@/hooks/useFavoriteProjects';
-import { useMembersDirectory } from '@/hooks/useMembersDirectory';
+import { membersDirectoryKey, useMembersDirectory } from '@/hooks/useMembersDirectory';
 import { useOwnedProjects } from '@/hooks/useOwnedProjects';
 import { getProject } from '@/services/projects';
 import { updateProfile } from '@/services/profiles';
@@ -29,6 +29,7 @@ export function MePage() {
   const { t, language, errorText } = useI18n();
   const labelFor = (value: string) => translateMemberLabel(language, value);
   const { user, profile, refreshProfile, logout } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const returnToGallery = () => {
     requestGalleryScrollRestore();
@@ -79,6 +80,8 @@ export function MePage() {
     setWechat(profile.wechat ?? '');
   }, [profile]);
 
+  const boundCard = members.find(member => user && member.accountId === user.$id);
+
   const favoriteMembers = useMemo(
     () =>
       favoriteMemberIds.flatMap((memberId) => {
@@ -112,6 +115,7 @@ export function MePage() {
       const uploaded = await uploadMedia(file, user.$id);
       await updateProfile(user.$id, { avatar_file_id: uploaded.fileId });
       await refreshProfile();
+      await queryClient.invalidateQueries({ queryKey: membersDirectoryKey });
       toast.success(t('头像已更新'));
     } catch (err) {
       toast.error(errorText(err, '头像上传失败'));
@@ -133,6 +137,7 @@ export function MePage() {
         wechat: wechat.trim(),
       });
       await refreshProfile();
+      await queryClient.invalidateQueries({ queryKey: membersDirectoryKey });
       toast.success(t('已保存'));
     } catch (err) {
       toast.error(errorText(err, '保存失败'));
@@ -188,6 +193,11 @@ export function MePage() {
           <div className="mt-3 text-xs text-muted-foreground">{user.email}</div>
         </div>
 
+        {boundCard && (
+          <p className="mb-4 text-sm text-muted-foreground">
+            {t('已绑定成员卡「{name}」。修改昵称或头像后，人员页会同步显示。', { name: boundCard.profile.name })}
+          </p>
+        )}
         <form onSubmit={onSave} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="me-name">{t('昵称')}</Label>

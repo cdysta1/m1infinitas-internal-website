@@ -31,7 +31,7 @@ export const MEMBER_CATEGORIES: MemberCategory[] = [
           { id: 'flute', label: '长笛', tags: ['长笛'] },
           { id: 'saxophone', label: '萨克斯', tags: ['萨克斯'] },
           { id: 'handpan', label: '手碟', tags: ['手碟'] },
-          { id: 'synthesizer-performance', label: '合成器', tags: ['合成器演奏'] },
+          { id: 'synthesizer-performance', label: '合成器', tags: ['合成器演奏', '合成器'] },
           { id: 'electric-zheng', label: '电筝', tags: ['电筝'] },
           { id: 'bel-canto', label: '美声', tags: ['美声'] },
           { id: 'throat-singing', label: '呼麦', tags: ['呼麦'] },

@@ -68,7 +68,7 @@ assert.equal(model.formatRelativeTime(new Date(Date.now() - 120_000), 'en'), '2 
 assert.equal(model.formatRelativeTime(new Date(Date.now() - 120_000), 'zh'), '2分钟前');
 
 const members = model.buildMembersDirectory([], []);
-assert.equal(members.length, 48);
+assert.equal(members.length, 49);
 members.forEach(({ meta }) => [meta.focus, ...meta.tags, ...meta.areas, ...meta.contacts.map(({ label }) => label)].forEach((label) => {
   assert(!/\p{Script=Han}/u.test(model.translateMemberLabel('en', label)), `Untranslated member label: ${label}`);
   assert.equal(model.translateMemberLabel('zh', label), label);

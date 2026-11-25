@@ -549,4 +549,10 @@ export const MEMBER_ROSTER: MemberRosterRecord[] = [
     contacts: [
     ],
   },
+  {
+    id: 'member-phorea', name: 'Phorea', aliases: ['pho'],
+    focus: '合成器 / 爵士 / 唱作',
+    description: '大家好 我是 pho 喜欢吃越南粉的 dubstep 模块 爵士 唱作属性乐子人',
+    tags: ['合成器', '电子音乐', '爵士', '唱作'], areas: ['音乐'], contacts: [],
+  },
 ];

@@ -8,7 +8,7 @@ const bundle = await build({
   },
   bundle: true, write: false, platform: 'node', format: 'esm',
 });
-const { toggleMemberCategory: toggle, removeMemberCategory: remove, matchesMemberCategories: matches, matchesMemberQuery, searchMembers, buildMembersDirectory } = await import(
+const { toggleMemberCategory: toggle, removeMemberCategory: remove, matchesMemberCategories: matches, matchesMemberQuery, searchMembers, buildMembersDirectory, applyMemberBindings } = await import(
   `data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`
 );
 
@@ -58,9 +58,20 @@ assert.equal(matches(multidisciplinary, ['visual', 'violin']), true);
 assert.equal(matches(multidisciplinary, ['all', 'unknown']), false);
 assert.equal(matches(member([], ['小提琴']), ['music']), true);
 
-const members = buildMembersDirectory([], []);
+const members = buildMembersDirectory();
+const linked = applyMemberBindings(members, new Map([['member-dia', 'user-a']]), new Map([
+  ['user-a', { name: 'New stage name', avatar_file_id: 'avatar-a' }],
+]));
+const dia = linked.find(entry => entry.profile.$id === 'member-dia');
+assert.equal(dia.accountId, 'user-a');
+assert.equal(dia.profile.avatar_file_id, 'avatar-a');
+assert.equal(dia.profile.name, 'New stage name');
+assert(matchesMemberQuery(dia, 'Dia'));
+assert.equal(linked.filter(entry => entry.accountId).length, 1);
+assert(linked.some(entry => entry.profile.$id === 'member-phorea'));
+
 const namesFor = (ids) => members.filter((entry) => matches(entry, ids)).map(({ profile }) => profile.name);
-assert.equal(namesFor(['all']).length, 48);
+assert.equal(namesFor(['all']).length, 49);
 assert.deepEqual(namesFor(['violin', 'yangqin']), []);
 assert.deepEqual(namesFor(['music', 'visual', 'digital']), ['张天澍 Tredd', '牟兰']);
 assert.deepEqual(namesFor(['music', 'visual', 'digital', 'research']), []);

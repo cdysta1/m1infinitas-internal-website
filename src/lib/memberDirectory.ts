@@ -42,7 +42,7 @@ export const MEMBER_AREAS = [
 const memberNameCollator = new Intl.Collator('zh-CN-u-co-pinyin');
 
 export function buildMembersDirectory(): MemberDirectoryEntry[] {
-  // Hide all real-time data from Appwrite, use only hardcoded roster
+  // Keep stable roster IDs for search, categories and favorites.
   const members: MemberDirectoryEntry[] = MEMBER_ROSTER.map((record) => ({
     profile: {
       $id: record.id,
@@ -58,6 +58,28 @@ export function buildMembersDirectory(): MemberDirectoryEntry[] {
   }));
 
   return members;
+}
+
+export function applyMemberBindings(
+  members: MemberDirectoryEntry[],
+  bindings: Map<string, string>,
+  profiles: Map<string, Profile>,
+): MemberDirectoryEntry[] {
+  return members.map((member) => {
+    const accountId = bindings.get(member.profile.$id);
+    if (!accountId) return member;
+    const profile = profiles.get(accountId);
+    return {
+      ...member,
+      accountId,
+      aliases: [...member.aliases, member.profile.name],
+      profile: {
+        ...member.profile,
+        name: profile?.name || member.profile.name,
+        avatar_file_id: profile?.avatar_file_id || member.profile.avatar_file_id,
+      },
+    };
+  });
 }
 
 export function sortMembers(members: MemberDirectoryEntry[]): MemberDirectoryEntry[] {

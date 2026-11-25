@@ -1,6 +1,7 @@
 import type { Language } from '@/i18n/messages';
 
 export const EN_MEMBER_LABELS: Record<string, string> = {
+  '爵士': 'Jazz', '合成器 / 爵士 / 唱作': 'Synthesizer / jazz / singer-songwriter',
   '全部': 'All', '音乐': 'Music', '音乐与声音': 'Music & sound', '声音艺术': 'Sound art',
   '剧场': 'Theatre', '剧场与空间': 'Theatre & space', '视觉': 'Visual arts', '空间': 'Space',
   '数字媒体': 'Digital media', '研究': 'Research', '运营': 'Operations', '其他': 'Other',

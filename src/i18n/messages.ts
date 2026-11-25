@@ -2,6 +2,7 @@ export type Language = 'zh' | 'en';
 export type MessageValues = Record<string, string | number>;
 
 export const EN_MESSAGES: Record<string, string> = {
+  '已绑定成员卡「{name}」。修改昵称或头像后，人员页会同步显示。': 'Linked member card: {name}. Your nickname and avatar also appear in the directory.',
   '加载中…': 'Loading...',
   '关闭': 'Close',
   '返回': 'Back',
