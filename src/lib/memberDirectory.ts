@@ -60,6 +60,11 @@ export function buildMembersDirectory(): MemberDirectoryEntry[] {
   return members;
 }
 
+export const MEMBER_BIO_LIMIT = 400;
+export const MEMBER_TAG_OPTIONS = [...new Set(MEMBER_ROSTER.flatMap(member => member.tags))]
+  .sort(memberNameCollator.compare);
+const allowedTags = new Set(MEMBER_TAG_OPTIONS);
+
 export function applyMemberBindings(
   members: MemberDirectoryEntry[],
   bindings: Map<string, string>,
@@ -72,6 +77,12 @@ export function applyMemberBindings(
     return {
       ...member,
       accountId,
+      meta: {
+        ...member.meta,
+        description: profile?.member_bio ?? member.meta.description,
+        tags: profile?.member_tags == null ? member.meta.tags
+          : [...new Set(profile.member_tags.filter(tag => allowedTags.has(tag)))],
+      },
       aliases: [...member.aliases, member.profile.name],
       profile: {
         ...member.profile,
