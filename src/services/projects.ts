@@ -5,6 +5,7 @@ import type { Project } from '@/types/models';
 import { env } from '@/lib/env';
 import {
   demoCreateProject,
+  demoDeleteProject,
   demoGetProject,
   demoListProjects,
   demoListProjectsByOwner,
@@ -19,6 +20,7 @@ export interface CreateProjectInput {
   summary: string;
   cover_file_id: string;
   owner_id: string;
+  is_anonymous: boolean;
 }
 
 export interface ListProjectsResult {
@@ -28,8 +30,8 @@ export interface ListProjectsResult {
 }
 
 export type UpdateProjectInput = Partial<
-  Pick<Project, 'title' | 'summary' | 'cover_file_id'>
->;
+  Pick<Project, 'title' | 'summary' | 'cover_file_id' | 'status'>
+> & { is_anonymous?: false };
 
 // List active projects ordered by updated_at desc, cursor-paginated.
 export async function listProjects(opts: {
@@ -86,6 +88,7 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
       summary: input.summary,
       cover_file_id: input.cover_file_id,
       owner_id: input.owner_id,
+      ...(input.is_anonymous && { is_anonymous: true }),
       status: PROJECT_STATUS.ACTIVE,
       updated_at: now,
     },
@@ -101,6 +104,9 @@ export async function updateProject(
   id: string,
   input: UpdateProjectInput,
 ): Promise<Project> {
+  if (input.is_anonymous !== undefined && input.is_anonymous !== false) {
+    throw new Error('署名后无法再改为匿名');
+  }
   if (env.demoMode) return demoUpdateProject(id, input);
   return databases.updateDocument<Project>(
     DATABASE_ID,
@@ -111,6 +117,11 @@ export async function updateProject(
       updated_at: new Date().toISOString(),
     },
   );
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  if (env.demoMode) return demoDeleteProject(id);
+  await databases.deleteDocument(DATABASE_ID, COLLECTIONS.projects, id);
 }
 
 // Bump updated_at; called after a new update is appended so the gallery reorders.
