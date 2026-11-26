@@ -2,7 +2,15 @@ export type Language = 'zh' | 'en';
 export type MessageValues = Record<string, string | number>;
 
 export const EN_MESSAGES: Record<string, string> = {
-  '已绑定成员卡「{name}」。修改昵称或头像后，人员页会同步显示。': 'Linked member card: {name}. Your nickname and avatar also appear in the directory.',
+  '我的卡片已绑定至「{name}」。修改昵称或头像后，人员页会同步显示。': 'My linked card: {name}. Your nickname and avatar also appear in the directory.',
+  '我的资料': 'My profile',
+  '移除标签 {tag}': 'Remove tag {tag}',
+  '我的简介': 'My bio',
+  '我的标签': 'My tags',
+  '选择已有标签': 'Choose existing tags',
+  '搜索已有标签': 'Search existing tags',
+  '没有匹配的标签': 'No matching tags',
+  '保存我的资料': 'Save my profile',
   '加载中…': 'Loading...',
   '关闭': 'Close',
   '返回': 'Back',
