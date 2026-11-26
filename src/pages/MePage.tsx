@@ -17,6 +17,8 @@ import { useFavoriteMembers } from '@/hooks/useFavoriteMembers';
 import { useFavoriteProjects } from '@/hooks/useFavoriteProjects';
 import { membersDirectoryKey, useMembersDirectory } from '@/hooks/useMembersDirectory';
 import { useOwnedProjects } from '@/hooks/useOwnedProjects';
+import { projectOwnerKey } from '@/hooks/useProjectDetail';
+import { projectsFeedKey } from '@/hooks/useProjectsFeed';
 import { getProject } from '@/services/projects';
 import { updateProfile } from '@/services/profiles';
 import { uploadMedia } from '@/services/storage';
@@ -24,6 +26,8 @@ import { buildPreviewUrl, getAvatarUrl } from '@/lib/media';
 import { requestGalleryScrollRestore } from '@/lib/galleryScroll';
 import { formatRelativeTime } from '@/lib/utils';
 import { translateMemberLabel } from '@/i18n/memberLabels';
+
+import { MemberCardEditor } from '@/components/members/MemberCardEditor';
 
 export function MePage() {
   const { t, language, errorText } = useI18n();
@@ -102,6 +106,16 @@ export function MePage() {
   const avatarUrl = getAvatarUrl(profile?.avatar_file_id, user.$id);
   const initials = (name || user.name || user.email).slice(0, 1).toUpperCase();
 
+  const syncSavedProfile = async (updated: Awaited<ReturnType<typeof updateProfile>>) => {
+    queryClient.setQueryData(projectOwnerKey(user.$id), updated);
+    await Promise.all([
+      refreshProfile(),
+      queryClient.invalidateQueries({ queryKey: ['updates', 'timeline'] }),
+      queryClient.invalidateQueries({ queryKey: membersDirectoryKey }),
+      queryClient.invalidateQueries({ queryKey: projectsFeedKey }),
+    ]);
+  };
+
   const onPickAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -113,9 +127,8 @@ export function MePage() {
     setUploadingAvatar(true);
     try {
       const uploaded = await uploadMedia(file, user.$id);
-      await updateProfile(user.$id, { avatar_file_id: uploaded.fileId });
-      await refreshProfile();
-      await queryClient.invalidateQueries({ queryKey: membersDirectoryKey });
+      const updated = await updateProfile(user.$id, { avatar_file_id: uploaded.fileId });
+      await syncSavedProfile(updated);
       toast.success(t('头像已更新'));
     } catch (err) {
       toast.error(errorText(err, '头像上传失败'));
@@ -132,12 +145,11 @@ export function MePage() {
     }
     setSaving(true);
     try {
-      await updateProfile(user.$id, {
-        name: name.trim(),
-        wechat: wechat.trim(),
+      const updated = await updateProfile(user.$id, {
+        ...(name.trim() !== profile?.name && { name: name.trim() }),
+        ...(wechat.trim() !== profile?.wechat && { wechat: wechat.trim() }),
       });
-      await refreshProfile();
-      await queryClient.invalidateQueries({ queryKey: membersDirectoryKey });
+      await syncSavedProfile(updated);
       toast.success(t('已保存'));
     } catch (err) {
       toast.error(errorText(err, '保存失败'));
@@ -195,7 +207,7 @@ export function MePage() {
 
         {boundCard && (
           <p className="mb-4 text-sm text-muted-foreground">
-            {t('已绑定成员卡「{name}」。修改昵称或头像后，人员页会同步显示。', { name: boundCard.profile.name })}
+            {t('我的卡片已绑定至「{name}」。修改昵称或头像后，人员页会同步显示。', { name: boundCard.profile.name })}
           </p>
         )}
         <form onSubmit={onSave} className="space-y-4">
@@ -236,6 +248,10 @@ export function MePage() {
             )}
           </Button>
         </form>
+
+        {boundCard && profile?.$id === user.$id && (
+          <MemberCardEditor key={user.$id} member={boundCard} />
+        )}
 
         <section className="mt-10 border-t pt-6" aria-labelledby="published-projects-heading">
           <div className="flex items-baseline justify-between gap-4">
