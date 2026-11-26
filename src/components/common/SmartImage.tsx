@@ -17,8 +17,10 @@ interface SmartImageProps {
 // an explicit "加载失败" state instead.
 export function SmartImage({ src, alt, wrapperClassName, imgClassName }: SmartImageProps) {
   const { t } = useI18n();
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState<string>();
+  const [failedSrc, setFailedSrc] = useState<string>();
+  const loaded = Boolean(src && src === loadedSrc);
+  const failed = Boolean(src && src === failedSrc);
 
   return (
     <div className={cn('relative overflow-hidden bg-muted', wrapperClassName)}>
@@ -27,8 +29,8 @@ export function SmartImage({ src, alt, wrapperClassName, imgClassName }: SmartIm
           src={src}
           alt={alt}
           loading="lazy"
-          onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
+          onLoad={() => setLoadedSrc(src)}
+          onError={() => setFailedSrc(src)}
           className={cn(
             'block h-full w-full transition-opacity duration-300',
             loaded ? 'opacity-100' : 'opacity-0',
