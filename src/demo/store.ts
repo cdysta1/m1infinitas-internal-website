@@ -535,6 +535,16 @@ export async function demoGetProject(id: string): Promise<Project> {
   return project;
 }
 
+export async function demoDeleteProject(id: string): Promise<void> {
+  const state = getState();
+  const project = await demoGetProject(id);
+  if (project.owner_id !== DEMO_USER_ID) throw new Error('只能删除自己的项目');
+  state.projects = state.projects.filter(project => project.$id !== id);
+  state.updates = state.updates.filter(update => update.project_id !== id);
+  persist();
+  projectListeners.forEach(listener => listener());
+}
+
 export async function demoCreateProject(input: { title: string; summary: string; cover_file_id: string; owner_id: string }): Promise<Project> {
   const now = new Date().toISOString();
   const project: Project = {

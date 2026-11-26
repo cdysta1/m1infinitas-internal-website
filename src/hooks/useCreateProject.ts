@@ -16,6 +16,7 @@ import type { Profile, Project, TimelineEntry } from '@/types/models';
 import { timelineKey, type TimelinePage } from './useUpdatesTimeline';
 
 export interface CreateProjectArgs {
+  anonymous: boolean;
   title: string;
   summary: string;
   files: File[];
@@ -39,7 +40,7 @@ export function useCreateProject() {
   const { user, profile } = useAuth();
 
   return useMutation<CreateProjectResult, Error, CreateProjectArgs, { tempProjectId: string; tempUpdateId: string }>({
-    mutationFn: async ({ title, summary, files }) => {
+    mutationFn: async ({ anonymous, title, summary, files }) => {
       if (!user) throw new Error(t('未登录'));
       if (files.length === 0) throw new Error(t('至少选择 1 张图片'));
       if (!files[0].type.startsWith('image/')) {
@@ -54,6 +55,7 @@ export function useCreateProject() {
         title,
         summary,
         cover_file_id: cover,
+        is_anonymous: anonymous,
         owner_id: user.$id,
       });
       await createUpdate({
@@ -66,7 +68,7 @@ export function useCreateProject() {
       });
       return { project };
     },
-    onMutate: async ({ title, summary, files, localPreviewUrls }) => {
+    onMutate: async ({ anonymous, title, summary, files, localPreviewUrls }) => {
       const tempProjectId = tempId('proj');
       const tempUpdateId = tempId('upd');
       const nowIso = new Date().toISOString();
@@ -86,6 +88,7 @@ export function useCreateProject() {
         title,
         summary,
         cover_file_id: '',
+        is_anonymous: anonymous,
         owner_id: user?.$id ?? '',
         status: PROJECT_STATUS.ACTIVE,
         updated_at: nowIso,

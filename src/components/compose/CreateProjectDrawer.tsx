@@ -33,6 +33,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
   const { t, errorText } = useI18n();
   const navigate = useNavigate();
   const createProject = useCreateProject();
+  const [anonymous, setAnonymous] = useState(false);
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [images, setImages] = useState<PickedImage[]>([]);
@@ -40,6 +41,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
   // Reset state each time the drawer opens.
   useEffect(() => {
     if (open) {
+      setAnonymous(false);
       setTitle('');
       setSummary('');
       setImages((prev) => {
@@ -60,6 +62,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
     if (!canSubmit) return;
     createProject.mutate(
       {
+        anonymous,
         title: title.trim(),
         summary: summary.trim(),
         files: images.map((i) => i.file),
@@ -107,7 +110,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
             <Textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder={t('项目介绍（最多 500 字）')}
+              placeholder={t('项目介绍（最多 {count} 字）', { count: MAX_PROJECT_SUMMARY_LENGTH })}
               maxLength={MAX_PROJECT_SUMMARY_LENGTH}
               rows={5}
               disabled={createProject.isPending}
@@ -123,6 +126,12 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
           </div>
         </div>
 
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={anonymous} disabled={createProject.isPending}
+            onChange={event => setAnonymous(event.target.checked)} />
+          {t('匿名发布')}
+        </label>
+        <p className="text-xs text-muted-foreground">{t('匿名时隐藏昵称、头像和微信。署名后无法再改为匿名。')}</p>
         <DrawerFooter>
           <Button
             size="lg"

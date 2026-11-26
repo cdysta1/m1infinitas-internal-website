@@ -39,7 +39,7 @@ export function MePage() {
     requestGalleryScrollRestore();
     navigate('/');
   };
-  const { data: members = [], isLoading: membersLoading } = useMembersDirectory();
+  const { data: members = [], isLoading: membersLoading, isSuccess: directoryLoaded, isPlaceholderData } = useMembersDirectory();
   const {
     favoriteIds: favoriteMemberIds,
     isLoading: favoriteMembersLoading,
@@ -249,6 +249,11 @@ export function MePage() {
           </Button>
         </form>
 
+        {directoryLoaded && !isPlaceholderData && !boundCard && (
+          <p className="mt-6 text-sm text-muted-foreground">
+            {t('你的账号还没有匹配成员名片。请联系管理员匹配，完成后就可以编辑名片上的简介和标签。')}
+          </p>
+        )}
         {boundCard && profile?.$id === user.$id && (
           <MemberCardEditor key={user.$id} member={boundCard} />
         )}

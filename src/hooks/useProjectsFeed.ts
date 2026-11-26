@@ -34,7 +34,7 @@ export function useProjectsFeed(enabled = true) {
         limit: PAGE_SIZE,
         cursor: pageParam,
       });
-      const owners = await getProfilesByIds(res.projects.map((p) => p.owner_id));
+      const owners = await getProfilesByIds(res.projects.filter(p => !p.is_anonymous).map(p => p.owner_id));
       return {
         projects: res.projects,
         owners,

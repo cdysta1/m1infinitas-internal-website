@@ -14,7 +14,7 @@ export function useProjectDetail(projectId: string | undefined) {
     queryFn: () => getProject(projectId!),
   });
 
-  const ownerId = projectQuery.data?.owner_id;
+  const ownerId = projectQuery.data?.is_anonymous ? undefined : projectQuery.data?.owner_id;
   const ownerQuery = useQuery<Profile | null>({
     queryKey: projectOwnerKey(ownerId ?? ''),
     enabled: Boolean(ownerId),

@@ -32,8 +32,8 @@ export function ProjectCard({
   const coverUrl = project.cover_file_id
     ? buildPreviewUrl(project.cover_file_id, 'cover')
     : undefined;
-  const ownerName = owner?.name ?? t('匿名');
-  const avatarUrl = getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
+  const ownerName = project.is_anonymous ? t('匿名') : owner?.name || t('未能加载作者昵称');
+  const avatarUrl = project.is_anonymous ? undefined : getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
   const initials = ownerName.slice(0, 1).toUpperCase() || '?';
 
   return (

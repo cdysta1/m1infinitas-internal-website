@@ -11,8 +11,19 @@ export type { MemberDirectoryEntry } from '@/lib/memberDirectory';
 
 export const membersDirectoryKey = ['members', 'directory', 'roster-v3'] as const;
 
-async function loadDirectory(): Promise<MemberDirectoryEntry[]> {
+const novaCardId = 'member-zhang-tianyi';
+
+function initialDirectory() {
   const members = buildMembersDirectory();
+  const nova = members.find(member => member.profile.$id === novaCardId);
+  if (nova) {
+    nova.meta = { ...nova.meta, contacts: nova.meta.contacts.filter(contact => contact.kind !== 'email') };
+  }
+  return members;
+}
+
+async function loadDirectory(): Promise<MemberDirectoryEntry[]> {
+  const members = initialDirectory();
   if (env.demoMode) {
     const id = 'demo-member-lucian';
     members.push({
@@ -25,11 +36,23 @@ async function loadDirectory(): Promise<MemberDirectoryEntry[]> {
   const bindings = new Map<string, string>();
   for (let start = 0; start < members.length; start += 50) {
     const ids = members.slice(start, start + 50).map(member => member.profile.$id);
-    const { documents } = await databases.listDocuments<Models.Document & { bound_user_id?: string }>(
+    const { documents } = await databases.listDocuments<Models.Document & { bound_user_id?: string; contacts?: string }>(
       DATABASE_ID, env.appwrite.collections.members,
-      [Query.equal('$id', ids), Query.limit(ids.length), Query.select(['$id', 'bound_user_id'])],
+      [Query.equal('$id', ids), Query.limit(ids.length), Query.select(['$id', 'bound_user_id', 'contacts'])],
     );
     for (const row of documents) {
+      if (row.$id === novaCardId && row.contacts) {
+        const nova = members.find(member => member.profile.$id === row.$id);
+        try {
+          const contacts: unknown = JSON.parse(row.contacts);
+          const email = Array.isArray(contacts) && contacts.find(contact => contact?.kind === 'email')?.value;
+          if (nova && typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            nova.meta.contacts.push({ kind: 'email', label: '邮箱', value: email, url: 'mailto:' + email });
+          }
+        } catch {
+          // Keep other contact methods when the stored contact list is malformed.
+        }
+      }
       if (row.bound_user_id) bindings.set(row.$id, row.bound_user_id);
     }
   }
@@ -42,6 +65,6 @@ export function useMembersDirectory() {
     queryKey: [...membersDirectoryKey, user?.$id],
     enabled: Boolean(user),
     queryFn: loadDirectory,
-    placeholderData: buildMembersDirectory,
+    placeholderData: initialDirectory,
   });
 }

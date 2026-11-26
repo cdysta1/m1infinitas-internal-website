@@ -33,7 +33,8 @@ import {
   collectProjectMediaAssets,
   type ProjectMediaKind,
 } from '@/lib/projectMedia';
-import { updateProject } from '@/services/projects';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { deleteProject, updateProject } from '@/services/projects';
 import { deleteMedia, uploadMany } from '@/services/storage';
 import { listUpdatesByProject, saveProjectMediaRecord } from '@/services/updates';
 import type { Project } from '@/types/models';
@@ -91,6 +92,10 @@ export function EditProjectDrawer({
   const [existingMedia, setExistingMedia] = useState<EditableMediaAsset[]>([]);
   const [initialMedia, setInitialMedia] = useState<EditableMediaAsset[]>([]);
   const [newImages, setNewImages] = useState<PickedImage[]>([]);
+  const [status, setStatus] = useState(project.status);
+  const [disclose, setDisclose] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [saving, setSaving] = useState(false);
 
   const mediaQuery = useQuery({
@@ -125,6 +130,8 @@ export function EditProjectDrawer({
       return;
     }
 
+    setDisclose(false);
+    setStatus(project.status);
     setTitle(project.title);
     setSummary(project.summary);
     setExistingMedia(loadedMedia);
@@ -139,7 +146,7 @@ export function EditProjectDrawer({
     existingMedia.some((asset) => asset.kind === 'image') ||
     newImages.some((image) => image.file.type.startsWith('image/'));
   const dirty =
-    title !== project.title ||
+    disclose || status !== project.status || title !== project.title ||
     summary !== project.summary ||
     newImages.length > 0 ||
     !sameMediaList(existingMedia, initialMedia);
@@ -153,6 +160,23 @@ export function EditProjectDrawer({
     dirty &&
     mediaQuery.isSuccess &&
     !saving;
+
+  const removeProject = async () => {
+    if (!user || user.$id !== project.owner_id || saving) return;
+    if (!window.confirm(t('确定删除《{title}》？删除后无法恢复。', { title: project.title }))) return;
+    setSaving(true);
+    try {
+      await deleteProject(project.$id);
+      setOpen(false);
+      if (location.pathname === '/projects/' + project.$id) navigate('/', { replace: true });
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success(t('项目已删除'));
+    } catch (error) {
+      toast.error(errorText(error, '删除项目失败'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const removeExistingImage = (index: number) => {
     setExistingMedia((current) => current.filter((_, itemIndex) => itemIndex !== index));
@@ -179,27 +203,24 @@ export function EditProjectDrawer({
       const nextTitle = title.trim();
       const nextSummary = summary.trim();
 
-      await updateProject(project.$id, {
-        title: nextTitle,
-        summary: nextSummary,
-        cover_file_id: nextMediaIds[0],
-      });
-
-      try {
+      const mediaChanged = !sameMediaList(existingMedia, initialMedia) || newImages.length > 0;
+      if (mediaChanged) {
         await saveProjectMediaRecord({
           projectId: project.$id,
           authorId: user.$id,
           fileIds: nextMediaIds,
-          mediaKinds: nextMedia.map((asset) => asset.kind),
+          mediaKinds: nextMedia.map(asset => asset.kind),
         });
-      } catch (error) {
-        await updateProject(project.$id, {
-          title: project.title,
-          summary: project.summary,
-          cover_file_id: project.cover_file_id,
-        });
-        throw error;
+        // The saved media record now references these uploads, even if the next write fails.
+        uploadedIds = [];
       }
+      await updateProject(project.$id, {
+        title: nextTitle,
+        summary: nextSummary,
+        cover_file_id: nextMediaIds[0],
+        ...(disclose && { is_anonymous: false }),
+        ...(status !== project.status && { status }),
+      });
 
       const removedIds = initialMedia
         .map((asset) => asset.id)
@@ -338,6 +359,20 @@ export function EditProjectDrawer({
 
             <div className="space-y-3">
               <div className="space-y-1.5">
+                <Label htmlFor="edit-project-status">{t('项目状态')}</Label>
+                <select id="edit-project-status" value={status} disabled={saving}
+                  className="block w-full rounded-md border bg-background p-2 text-sm"
+                  onChange={event => setStatus(event.target.value === 'done' ? 'done' : 'active')}>
+                  <option value="active">{t('进行中')}</option>
+                  <option value="done">{t('已完成')}</option>
+                </select>
+                {project.is_anonymous && (
+                  <label className="flex items-center gap-2 py-2 text-sm">
+                    <input type="checkbox" checked={disclose} disabled={saving}
+                      onChange={event => setDisclose(event.target.checked)} />
+                    {t('改为署名（保存后无法再匿名）')}
+                  </label>
+                )}
                 <Label htmlFor="edit-project-title">{t('项目名称')}</Label>
                 <Input
                   id="edit-project-title"
@@ -377,6 +412,11 @@ export function EditProjectDrawer({
               t('保存修改')
             )}
           </Button>
+          {user?.$id === project.owner_id && (
+            <Button variant="ghost" className="text-destructive" disabled={saving} onClick={() => void removeProject()}>
+              {t('删除项目')}
+            </Button>
+          )}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

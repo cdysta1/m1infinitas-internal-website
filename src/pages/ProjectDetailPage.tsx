@@ -80,6 +80,8 @@ export function ProjectDetailPage() {
     }));
   }, [entries, project]);
 
+  if (!projectLoading && !project) return <ProjectNotFound />;
+
   if (projectLoading || !project) {
     return (
       <AppShell showCreate={false} onSwipeBack={returnToGallery}>
@@ -95,8 +97,8 @@ export function ProjectDetailPage() {
     );
   }
 
-  const ownerName = owner?.name ?? t('匿名');
-  const ownerAvatar = getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
+  const ownerName = project.is_anonymous ? t('匿名') : owner?.name || t('未能加载作者昵称');
+  const ownerAvatar = project.is_anonymous ? undefined : getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
   const favorite = favoriteSet.has(project.$id);
   const favoriteBusy = favoritesLoading || favoritePendingId !== null;
   const canEdit = user?.$id === project.owner_id;
@@ -169,7 +171,7 @@ export function ProjectDetailPage() {
         <aside className="order-1 min-w-0 lg:sticky lg:top-20 lg:order-2">
           <div className="flex items-center justify-between gap-3 border-b pb-3">
             <span className="font-mono text-[9px] uppercase text-muted-foreground">
-              {t('进行中的项目')}
+              {project.status === 'done' ? t('已完成的项目') : t('进行中的项目')}
             </span>
             <div className="flex items-center gap-2">
               {canEdit && (
@@ -219,7 +221,7 @@ export function ProjectDetailPage() {
             </div>
           </div>
 
-          {owner?.wechat && (
+          {!project.is_anonymous && owner?.wechat && (
             <button
               type="button"
               onClick={() => copy(owner.wechat, t('微信号已复制'))}
