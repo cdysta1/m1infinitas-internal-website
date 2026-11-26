@@ -51,6 +51,7 @@ npm run dev
 | summary | string | 200 | ✓ | | 一句话简介 |
 | cover_file_id | string | 64 | ✓ | | 封面 |
 | owner_id | string | 36 | ✓ | | 负责人 user id |
+| is_anonymous | boolean | | | false | 发布界面隐藏署名。部署前添加为可选字段，旧项目按署名显示。 |
 | status | enum | `active`, `done` | ✓ | `active` | |
 | updated_at | datetime | | ✓ | | 用于排序 |
 
