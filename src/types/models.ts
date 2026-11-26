@@ -8,6 +8,8 @@ export interface Profile extends Models.Document {
   name: string;
   wechat: string;
   avatar_file_id?: string;
+  member_bio?: string | null;
+  member_tags?: string[] | null;
 }
 
 // Project document (collection: projects).
