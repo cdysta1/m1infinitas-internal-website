@@ -18,6 +18,7 @@ export interface Project extends Models.Document {
   summary: string;
   cover_file_id: string;
   owner_id: string;
+  is_anonymous?: boolean;
   status: ProjectStatus;
   updated_at: string;
 }
