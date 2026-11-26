@@ -64,6 +64,14 @@ const linked = applyMemberBindings(members, new Map([['member-dia', 'user-a']]),
 ]));
 const dia = linked.find(entry => entry.profile.$id === 'member-dia');
 assert.equal(dia.accountId, 'user-a');
+const withEdits = (patch) => applyMemberBindings(members, new Map([['member-dia', 'user-a']]),
+  new Map([['user-a', patch]])).find(entry => entry.profile.$id === 'member-dia');
+assert.equal(withEdits({ member_bio: '' }).meta.description, '');
+assert.deepEqual(withEdits({ member_tags: [] }).meta.tags, []);
+assert.deepEqual(withEdits({ member_tags: ['爵士', '任意新增标签', '爵士'] }).meta.tags, ['爵士']);
+assert.deepEqual(withEdits({ member_tags: null }).meta.tags, dia.meta.tags);
+assert.equal(withEdits({ member_bio: null }).meta.description, dia.meta.description);
+
 assert.equal(dia.profile.avatar_file_id, 'avatar-a');
 assert.equal(dia.profile.name, 'New stage name');
 assert(matchesMemberQuery(dia, 'Dia'));
