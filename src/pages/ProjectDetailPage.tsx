@@ -340,7 +340,7 @@ export function ProjectDetailPage() {
                 onClick={() => setShareDialogOpen(true)}
                 aria-label={t('分享项目')}
                 title={t('分享项目')}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted/85 text-foreground/80 ring-1 ring-inset ring-black/[0.06] transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/60 text-foreground/70 transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Share2 className="h-[18px] w-[18px]" />
               </button>

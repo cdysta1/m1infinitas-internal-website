@@ -126,8 +126,8 @@ export function ProjectStatusBadge({
 }
 
 const FAVORITE_BURST_OFFSETS = [
-  [0, -24], [17, -17], [24, 0], [17, 17],
-  [0, 24], [-17, 17], [-24, 0], [-17, -17],
+  [0, -18], [13, -13], [18, 0], [13, 13],
+  [0, 18], [-13, 13], [-18, 0], [-13, -13],
 ] as const;
 
 export function FavoriteCountButton({
@@ -185,28 +185,28 @@ export function FavoriteCountButton({
         onToggle();
       }}
       className={cn(
-        'relative isolate inline-flex shrink-0 items-center justify-center tabular-nums transition-[color,border-color,background-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90 disabled:cursor-wait motion-reduce:transition-none motion-reduce:active:scale-100',
+        'relative isolate inline-flex shrink-0 items-center justify-center tabular-nums transition-[color,border-color,background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90 disabled:cursor-wait motion-reduce:transition-none motion-reduce:active:scale-100',
         !showCount
           ? cn(
               'rounded-full',
-              size === 'lg' ? 'h-11 w-11' : 'h-10 w-10',
+              size === 'lg' ? 'h-10 w-10' : 'h-9 w-9',
               favorite
-                ? 'bg-rose-500 text-white shadow-[0_6px_18px_rgba(244,63,94,0.34)] hover:bg-rose-600'
-                : 'bg-muted/85 text-foreground/80 ring-1 ring-inset ring-black/[0.06] hover:bg-rose-50 hover:text-rose-500 hover:ring-rose-200',
+                ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/15'
+                : 'bg-muted/60 text-foreground/65 hover:bg-muted hover:text-foreground',
             )
           : minimal
             ? cn(
                 'min-h-8 gap-1.5 rounded-full px-2.5 text-xs font-medium sm:min-h-7',
                 favorite
-                  ? 'bg-rose-500/12 text-rose-600 ring-1 ring-inset ring-rose-500/25'
-                  : 'bg-muted/70 text-foreground/75 hover:bg-rose-50 hover:text-rose-600',
+                  ? 'bg-rose-500/10 text-rose-600'
+                  : 'bg-muted/60 text-foreground/70 hover:bg-muted hover:text-foreground',
               )
             : cn(
                 'rounded-full font-medium',
                 size === 'lg' ? 'h-10 gap-2 px-4 text-sm' : 'h-8 gap-1.5 px-3 text-xs',
                 favorite
-                  ? 'bg-rose-500 text-white shadow-[0_6px_18px_rgba(244,63,94,0.28)] hover:bg-rose-600'
-                  : 'bg-muted/70 text-foreground/85 hover:bg-rose-50 hover:text-rose-600',
+                  ? 'bg-rose-500/12 text-rose-600 hover:bg-rose-500/18'
+                  : 'bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground',
               ),
         disabled && !feedback && 'opacity-50',
         className,
@@ -224,14 +224,16 @@ export function FavoriteCountButton({
           )}
         >
           <Heart
-            strokeWidth={2}
+            strokeWidth={1.85}
             className={cn(
               !showCount
-                ? 'h-5 w-5'
+                ? size === 'lg'
+                  ? 'h-[19px] w-[19px]'
+                  : 'h-[18px] w-[18px]'
                 : size === 'lg'
                   ? 'h-[18px] w-[18px]'
                   : 'h-[15px] w-[15px]',
-              favorite && (showCount && minimal ? 'fill-rose-500 text-rose-500' : 'fill-current'),
+              favorite && 'fill-current',
             )}
           />
         </span>

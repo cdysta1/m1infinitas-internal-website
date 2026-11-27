@@ -147,62 +147,62 @@
   }
 
   .favorite-heart-like {
-    color: #f43f5e;
-    animation: 560ms cubic-bezier(0.22, 1, 0.36, 1) both favorite-heart-pop;
+    color: #e11d48;
+    animation: 500ms cubic-bezier(0.22, 1, 0.36, 1) both favorite-heart-pop;
   }
 
   .favorite-heart-unlike {
-    animation: 260ms ease-out both favorite-heart-release;
+    animation: 240ms ease-out both favorite-heart-release;
   }
 
   .favorite-burst {
-    color: #f43f5e;
+    color: #e11d48;
   }
 
   .favorite-ring {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 24px;
-    height: 24px;
-    border: 1.5px solid currentColor;
+    width: 20px;
+    height: 20px;
+    border: 1.25px solid currentColor;
     border-radius: 50%;
     opacity: 0;
-    animation: 560ms ease-out both favorite-ring-expand;
+    animation: 500ms ease-out both favorite-ring-expand;
   }
 
   .favorite-particle {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 3.5px;
-    height: 3.5px;
+    width: 2.5px;
+    height: 2.5px;
     border-radius: 50%;
     background: currentColor;
     opacity: 0;
-    animation: 600ms cubic-bezier(0.16, 1, 0.3, 1) both favorite-particle-burst;
+    animation: 520ms cubic-bezier(0.16, 1, 0.3, 1) both favorite-particle-burst;
   }
 
   @keyframes favorite-heart-pop {
-    0% { transform: scale(0.65) rotate(-12deg); }
-    35% { transform: scale(1.48) rotate(8deg); }
-    65% { transform: scale(0.92) rotate(-4deg); }
+    0% { transform: scale(0.75) rotate(-8deg); }
+    35% { transform: scale(1.32) rotate(5deg); }
+    68% { transform: scale(0.95) rotate(-2deg); }
     100% { transform: scale(1) rotate(0); }
   }
 
   @keyframes favorite-heart-release {
-    0% { transform: scale(0.7); opacity: 0.4; }
+    0% { transform: scale(0.78); opacity: 0.5; }
     100% { transform: scale(1); opacity: 1; }
   }
 
   @keyframes favorite-ring-expand {
-    0% { transform: translate(-50%, -50%) scale(0.65); opacity: 0.72; }
-    100% { transform: translate(-50%, -50%) scale(1.85); opacity: 0; }
+    0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0.45; }
+    100% { transform: translate(-50%, -50%) scale(1.65); opacity: 0; }
   }
 
   @keyframes favorite-particle-burst {
     0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-    25% { opacity: 1; }
+    25% { opacity: 0.72; }
     100% {
       transform: translate(calc(-50% + var(--favorite-x)), calc(-50% + var(--favorite-y))) scale(0.35);
       opacity: 0;
