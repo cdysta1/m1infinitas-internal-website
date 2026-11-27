@@ -1,12 +1,13 @@
 import { useI18n } from '@/app/I18nProvider';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { buildAuthPath, readRedirectTarget } from '@/lib/redirect';
 import { InviteCodeError } from '@/services/auth';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
@@ -14,6 +15,9 @@ export function RegisterPage() {
   const { t, errorText } = useI18n();
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const from = readRedirectTarget(searchParams, location.state);
   const [form, setForm] = useState({
     inviteCode: '',
     email: '',
@@ -48,7 +52,7 @@ export function RegisterPage() {
         wechat: form.wechat.trim(),
       });
       toast.success(t('注册成功，欢迎来到 M1'));
-      navigate('/', { replace: true });
+      navigate(from, { replace: true });
     } catch (err) {
       console.error('[register] failed', err);
       if (err instanceof InviteCodeError) {
@@ -160,7 +164,7 @@ export function RegisterPage() {
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">{t('已有账号？')}{' '}
-          <Link to="/login" className="text-foreground underline underline-offset-4">{t('直接登录')}</Link>
+          <Link to={buildAuthPath('/login', from)} className="text-foreground underline underline-offset-4">{t('直接登录')}</Link>
         </p>
       </div>
     </div>

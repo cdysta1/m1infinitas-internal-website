@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowUpRight, CheckCircle2, Copy, Loader2, Pencil, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CheckCircle2, Copy, Loader2, Pencil, RotateCcw, Share2 } from 'lucide-react';
 import { useI18n } from '@/app/I18nProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -8,6 +8,7 @@ import { Lightbox } from '@/components/common/Lightbox';
 import { SmartImage } from '@/components/common/SmartImage';
 import { MemberProfileDialog } from '@/components/members/MemberPreviewDialogs';
 import { EditProjectDrawer } from '@/components/project/EditProjectDrawer';
+import { ShareProjectDialog } from '@/components/project/ShareProjectDialog';
 import {
   ApplyButton,
   FavoriteCountButton,
@@ -56,6 +57,7 @@ export function ProjectDetailPage() {
   const { copy, copied } = useCopyToClipboard();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { project, owner, isLoading: projectLoading } = useProjectDetail(id);
   const { pendingProjectId: statusPendingId, toggleStatus } = useToggleProjectStatus();
   const { data: members = [] } = useMembersDirectory();
@@ -87,6 +89,7 @@ export function ProjectDetailPage() {
     window.scrollTo({ top: 0, behavior: 'auto' });
     setLightboxIndex(null);
     setOwnerDialogOpen(false);
+    setShareDialogOpen(false);
   }, [id]);
 
   const media = useMemo<ProjectMedia[]>(() => {
@@ -152,9 +155,23 @@ export function ProjectDetailPage() {
           >
             <ArrowLeft className="h-4 w-4" />{t('返回首页')}
           </Button>
-          <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-            {t('项目档案')}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden font-mono text-[9px] uppercase tracking-wider text-muted-foreground sm:inline">
+              {t('项目档案')}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShareDialogOpen(true)}
+              className="-mr-2 gap-1.5 rounded-full text-muted-foreground hover:text-foreground"
+              aria-label={t('分享项目')}
+              title={t('分享项目')}
+            >
+              <Share2 className="h-4 w-4" />
+              <span>{t('分享')}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -309,6 +326,7 @@ export function ProjectDetailPage() {
               <FavoriteCountButton
                 size="lg"
                 appearance="pill"
+                showCount={false}
                 favorite={favorite}
                 count={favoriteCount}
                 onToggle={() => void toggleFavorite(project.$id)}
@@ -316,6 +334,16 @@ export function ProjectDetailPage() {
                 aria-label={`${favorite ? t('取消收藏项目') : t('收藏项目')} ${project.title}`}
                 title={favorite ? t('取消收藏项目') : t('收藏项目')}
               />
+
+              <button
+                type="button"
+                onClick={() => setShareDialogOpen(true)}
+                aria-label={t('分享项目')}
+                title={t('分享项目')}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted/85 text-foreground/80 ring-1 ring-inset ring-black/[0.06] transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Share2 className="h-[18px] w-[18px]" />
+              </button>
             </div>
 
             {canEdit && (
@@ -404,6 +432,13 @@ export function ProjectDetailPage() {
           currentProjectId={project.$id}
         />
       )}
+
+      <ShareProjectDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        project={project}
+        ownerName={ownerName}
+      />
     </AppShell>
   );
 }

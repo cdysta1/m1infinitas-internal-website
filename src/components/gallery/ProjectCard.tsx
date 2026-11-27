@@ -129,17 +129,17 @@ export function ProjectCard({
           </div>
         </Link>
 
-        {/* Minimal Caption & Borderless Actions */}
-        <div className="flex min-w-0 flex-1 flex-col justify-between sm:pt-2.5">
-          <div>
+        {/* Minimal Caption with Elevated Right-Side Like & Clean Bottom Meta */}
+        <div className="flex min-w-0 flex-1 flex-col justify-between sm:pt-3">
+          <div className="flex items-start justify-between gap-2.5">
             <Link
               to={`/projects/${project.$id}`}
               className={cn(
-                'block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 pending && 'pointer-events-none',
               )}
             >
-              <h3 className="line-clamp-2 text-[14px] font-medium leading-snug tracking-tight text-foreground sm:text-[13px]">
+              <h3 className="line-clamp-2 text-[14px] font-medium leading-snug tracking-tight text-foreground sm:text-[13.5px]">
                 {project.title}
               </h3>
               {project.summary && (
@@ -149,7 +149,24 @@ export function ProjectCard({
               )}
             </Link>
 
-            <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            {!pending && !failed && (
+              <FavoriteCountButton
+                appearance="minimal"
+                showCount={false}
+                data-onboarding="favorite-project"
+                favorite={favorite}
+                count={favoriteCount}
+                onToggle={onFavoriteToggle}
+                disabled={favoritePending || pending}
+                aria-label={`${favorite ? t('取消收藏项目') : t('收藏项目')} ${project.title}`}
+                title={favorite ? t('取消收藏项目') : t('收藏项目')}
+                className="-mt-0.5 shrink-0"
+              />
+            )}
+          </div>
+
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <Avatar className="h-4 w-4 shrink-0">
                 <AvatarImage src={avatarUrl} alt={ownerName} />
                 <AvatarFallback className="text-[9px]">{initials}</AvatarFallback>
@@ -158,25 +175,11 @@ export function ProjectCard({
               <span aria-hidden>·</span>
               <span className="min-w-0 truncate">{timeText}</span>
             </div>
-          </div>
 
-          {!pending && !failed && (
-            <div className="mt-2.5 flex items-center justify-between gap-2">
+            {!pending && !failed && (
               <ApplyButton project={project} variant="minimal" />
-
-              <FavoriteCountButton
-                appearance="minimal"
-                data-onboarding="favorite-project"
-                favorite={favorite}
-                count={favoriteCount}
-                onToggle={onFavoriteToggle}
-                disabled={favoritePending || pending}
-                aria-label={`${favorite ? t('取消收藏项目') : t('收藏项目')} ${project.title}`}
-                title={favorite ? t('取消收藏项目') : t('收藏项目')}
-                className="ml-auto"
-              />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </article>

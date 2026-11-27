@@ -1,12 +1,13 @@
 import { useI18n } from '@/app/I18nProvider';
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { buildAuthPath, readRedirectTarget } from '@/lib/redirect';
 import { isAppwriteUnauthorized } from '@/services/auth';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
@@ -15,11 +16,12 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
 
-  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/';
+  const from = readRedirectTarget(searchParams, location.state);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +102,7 @@ export function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">{t('还没有账号？')}{' '}
-          <Link to="/register" className="text-foreground underline underline-offset-4">{t('用邀请码注册')}</Link>
+          <Link to={buildAuthPath('/register', from)} className="text-foreground underline underline-offset-4">{t('用邀请码注册')}</Link>
         </p>
       </div>
     </div>

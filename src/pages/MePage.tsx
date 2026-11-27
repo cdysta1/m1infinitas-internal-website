@@ -30,6 +30,11 @@ import { projectOwnerKey } from '@/hooks/useProjectDetail';
 import { projectsFeedKey } from '@/hooks/useProjectsFeed';
 import { getProject } from '@/services/projects';
 import { createProfile, updateProfile } from '@/services/profiles';
+import {
+  fetchEmailNotificationPref,
+  readEmailNotificationPref,
+  saveEmailNotificationPref,
+} from '@/services/notificationPrefs';
 import { uploadMedia } from '@/services/storage';
 import { buildPreviewUrl, getAvatarUrl } from '@/lib/media';
 import { requestGalleryScrollRestore } from '@/lib/galleryScroll';
@@ -110,7 +115,23 @@ export function MePage() {
   const [wechat, setWechat] = useState(profile?.wechat ?? '');
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [emailNotify, setEmailNotify] = useState(() => readEmailNotificationPref(user));
+  const [savingEmailNotify, setSavingEmailNotify] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setEmailNotify(readEmailNotificationPref(user));
+    if (!user?.$id) return;
+    let cancelled = false;
+    void fetchEmailNotificationPref(user.$id)
+      .then((value) => {
+        if (!cancelled) setEmailNotify(value);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!profile) return;
@@ -240,6 +261,53 @@ export function MePage() {
       setSaving(false);
     }
   };
+
+  const onToggleEmailNotify = async () => {
+    if (savingEmailNotify) return;
+    const next = !emailNotify;
+    setEmailNotify(next);
+    setSavingEmailNotify(true);
+    try {
+      await saveEmailNotificationPref(user.$id, next);
+      toast.success(next ? t('已开启投递邮件提醒') : t('已关闭投递邮件提醒'));
+    } catch (err) {
+      setEmailNotify(!next);
+      toast.error(errorText(err, '提醒设置保存失败'));
+    } finally {
+      setSavingEmailNotify(false);
+    }
+  };
+
+  const emailNotifyControl = (
+    <div className="mt-5 flex items-center justify-between gap-4 border-t border-border/60 pt-5">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground">{t('投递邮件提醒')}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+          {t('收到新的项目投递时，同步发送邮件至你的注册邮箱')}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={emailNotify}
+        aria-label={t('投递邮件提醒')}
+        disabled={savingEmailNotify}
+        onClick={() => void onToggleEmailNotify()}
+        className={cn(
+          'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50',
+          emailNotify ? 'bg-foreground' : 'bg-muted-foreground/25',
+        )}
+      >
+        <span
+          aria-hidden
+          className={cn(
+            'block h-6 w-6 rounded-full bg-background shadow-sm transition-transform duration-200',
+            emailNotify ? 'translate-x-5' : 'translate-x-0',
+          )}
+        />
+      </button>
+    </div>
+  );
 
   const dirty = profile
     ? trimmedName !== (profile.name ?? '') || trimmedWechat !== (profile.wechat ?? '')
@@ -739,6 +807,7 @@ export function MePage() {
                         )}
                       </Button>
                     </form>
+                    {emailNotifyControl}
                   </section>
 
                   <section className="rounded-2xl bg-muted/40 p-5 sm:p-6">
@@ -807,6 +876,7 @@ export function MePage() {
                       )}
                     </Button>
                   </form>
+                  {emailNotifyControl}
                 </section>
 
                 {directoryLoaded && !isPlaceholderData && !boundCard && (

@@ -1,7 +1,21 @@
-### Appwrite 发布配置
+# `project-interactions` Appwrite Function
 
-使用 Node 22、入口 main.mjs、函数 ID project-interactions。仅允许 Users 执行，动态 API key 需要 users.read 和 documents.write。DATABASE_ID 默认为 m1_internal。收藏量按已有账户偏好去重汇总，仅返回项目 ID 和人数。
+Node.js 22 function, entrypoint `main.mjs`, execution role `All users`, scopes:
+- `users.read`
+- `documents.write`
+- `messages.write` (only needed if using `USE_APPWRITE_MESSAGING=true`)
 
-在同一数据库创建 project_submissions 集合，开启文档级权限，集合级权限留空。添加必填字符串 sender_id、recipient_id、project_id（各 36）、project_title（80），以及必填 Mediumtext 字段 snapshot。为 sender_id、recipient_id 分别建立 key 索引。函数根据已登录账号和项目记录确定收发双方，写入只读快照，同一账号对同一项目的重复投递返回成功且保留首次内容。收件箱按接收者查询，项目删除后仍保留投递时的标题。
+## Optional Email Notification on New Submissions
 
-本地演示使用浏览器存储，生产使用上述函数和数据库。
+When a new submission is created (never on duplicate retries), the function checks the recipient's `prefs.email_on_submission` (default `true`) and sends an email via whichever provider is configured in Function Environment Variables:
+
+1. **Zero-domain SMTP via Appwrite Messaging (recommended for \$0 without a custom domain)**:
+   - In Appwrite Console → Messaging → Providers → Create SMTP provider (QQ / 163 / Outlook / Gmail app password).
+   - Add scope `messages.write` to `project-interactions`.
+   - Set environment variable `USE_APPWRITE_MESSAGING=true` (and optionally `SITE_URL`).
+2. **Resend API** (with custom domain):
+   - Set `RESEND_API_KEY` and `MAIL_FROM` (e.g. `M1 Infinitas <notify@yourdomain.com>`).
+3. **Brevo API**:
+   - Set `BREVO_API_KEY` and `MAIL_FROM` (sender email address).
+
+Email failures are logged and never block the in-app submission.
