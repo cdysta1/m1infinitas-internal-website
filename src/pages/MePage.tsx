@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Camera, CheckCircle2, Heart, Layers, Loader2, LogOut, Pencil, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Camera, CheckCircle2, Copy, Heart, Layers, Loader2, LogOut, Mail, Pencil, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/app/I18nProvider';
 import { SmartImage } from '@/components/common/SmartImage';
@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useFavoriteMembers } from '@/hooks/useFavoriteMembers';
 import { useFavoriteProjects } from '@/hooks/useFavoriteProjects';
 import { membersDirectoryKey, useMembersDirectory } from '@/hooks/useMembersDirectory';
@@ -29,7 +30,7 @@ import { useToggleProjectStatus } from '@/hooks/useToggleProjectStatus';
 import { projectOwnerKey } from '@/hooks/useProjectDetail';
 import { projectsFeedKey } from '@/hooks/useProjectsFeed';
 import { getProject } from '@/services/projects';
-import { createProfile, updateProfile } from '@/services/profiles';
+import { createProfile, getProfile, updateProfile } from '@/services/profiles';
 import {
   fetchEmailNotificationPref,
   readEmailNotificationPref,
@@ -55,6 +56,7 @@ export function MePage() {
   const { t, language, errorText } = useI18n();
   const labelFor = (value: string) => translateMemberLabel(language, value);
   const { user, profile, refreshProfile, logout } = useAuth();
+  const { copy } = useCopyToClipboard();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -140,6 +142,17 @@ export function MePage() {
   }, [profile]);
 
   const boundCard = members.find(member => user && member.accountId === user.$id);
+  const adminMember = useMemo(
+    () => members.find((member) => member.profile.$id === 'member-zhang-siwei'),
+    [members],
+  );
+  const { data: adminProfile } = useQuery({
+    queryKey: projectOwnerKey(adminMember?.accountId ?? ''),
+    queryFn: () => getProfile(adminMember!.accountId!),
+    enabled: Boolean(user && !boundCard && adminMember?.accountId),
+  });
+  const adminWechat = adminProfile?.wechat || adminMember?.profile.wechat || '';
+  const adminEmail = adminMember?.meta.contacts.find((contact) => contact.kind === 'email')?.value || '';
 
   const favoriteMembers = useMemo(
     () =>
@@ -832,64 +845,118 @@ export function MePage() {
                 </div>
               </div>
             ) : (
-              <div className="mx-auto max-w-md space-y-5">
-                <section className="rounded-2xl bg-muted/40 p-5 sm:p-6">
-                  <h2 className="text-base font-semibold">{t('账号信息')}</h2>
-                  <form onSubmit={onSave} className="mt-4 space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="me-name">{t('昵称')}</Label>
-                      <Input
-                        id="me-name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        maxLength={64}
-                        disabled={saving}
-                        className="bg-background"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="me-wechat">{t('微信号')}</Label>
-                      <Input
-                        id="me-wechat"
-                        value={wechat}
-                        onChange={(e) => setWechat(e.target.value)}
-                        maxLength={64}
-                        disabled={saving}
-                        className="bg-background"
-                        required
-                      />
-                    </div>
+              <div className="space-y-6">
+                <div
+                  className={cn(
+                    directoryLoaded && !isPlaceholderData && !boundCard
+                      ? 'grid gap-6 md:grid-cols-2 md:items-start'
+                      : 'mx-auto max-w-md',
+                  )}
+                >
+                  <section className="rounded-2xl bg-muted/40 p-5 sm:p-6">
+                    <h2 className="text-base font-semibold">{t('账号信息')}</h2>
+                    <form onSubmit={onSave} className="mt-4 space-y-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="me-name">{t('昵称')}</Label>
+                        <Input
+                          id="me-name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          maxLength={64}
+                          disabled={saving}
+                          className="bg-background"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="me-wechat">{t('微信号')}</Label>
+                        <Input
+                          id="me-wechat"
+                          value={wechat}
+                          onChange={(e) => setWechat(e.target.value)}
+                          maxLength={64}
+                          disabled={saving}
+                          className="bg-background"
+                          required
+                        />
+                      </div>
 
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full rounded-full"
-                      disabled={!dirty || saving}
-                    >
-                      {saving ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />{t('保存中…')}
-                        </>
-                      ) : (
-                        t('保存')
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="w-full rounded-full"
+                        disabled={!dirty || saving}
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />{t('保存中…')}
+                          </>
+                        ) : (
+                          t('保存')
+                        )}
+                      </Button>
+                    </form>
+                    {emailNotifyControl}
+                  </section>
+
+                  {directoryLoaded && !isPlaceholderData && !boundCard && (
+                    <section className="rounded-2xl bg-muted/40 p-5 sm:p-6">
+                      <h2 className="text-base font-semibold">{t('匹配成员名片')}</h2>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                        {t('你的账号还没有匹配成员名片。联系「张思维」完成匹配后，即可编辑名片上的简介和标签。')}
+                      </p>
+
+                      {(adminWechat || adminEmail) && (
+                        <div className="mt-4 space-y-2.5">
+                          {adminWechat && (
+                            <button
+                              type="button"
+                              onClick={() => void copy(adminWechat, t('已复制张思维微信号'))}
+                              className="flex w-full items-center justify-between gap-3 rounded-xl bg-background px-4 py-3 text-left transition-colors hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <span className="min-w-0">
+                                <span className="block text-[11px] text-muted-foreground">
+                                  {t('点击复制张思维微信号')}
+                                </span>
+                                <span className="mt-0.5 block truncate text-sm font-medium text-foreground">
+                                  {adminWechat}
+                                </span>
+                              </span>
+                              <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            </button>
+                          )}
+
+                          {adminEmail && (
+                            <button
+                              type="button"
+                              onClick={() => void copy(adminEmail, t('已复制张思维邮箱'))}
+                              className="flex w-full items-center justify-between gap-3 rounded-xl bg-background px-4 py-3 text-left transition-colors hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <span className="flex min-w-0 items-center gap-2.5">
+                                <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <span className="min-w-0">
+                                  <span className="block text-[11px] text-muted-foreground">
+                                    {t('点击复制张思维邮箱')}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-sm font-medium text-foreground">
+                                    {adminEmail}
+                                  </span>
+                                </span>
+                              </span>
+                              <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            </button>
+                          )}
+                        </div>
                       )}
-                    </Button>
-                  </form>
-                  {emailNotifyControl}
-                </section>
+                    </section>
+                  )}
+                </div>
 
-                {directoryLoaded && !isPlaceholderData && !boundCard && (
-                  <p className="rounded-2xl bg-muted/35 p-4 text-xs leading-relaxed text-muted-foreground">
-                    {t('你的账号还没有匹配成员名片。请联系管理员匹配，完成后就可以编辑名片上的简介和标签。')}
-                  </p>
-                )}
-
-                <div className="flex justify-center pt-1">
+                <div className="flex justify-end">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-full px-5 text-muted-foreground hover:text-foreground"
+                    className="rounded-full px-4 text-muted-foreground hover:text-foreground"
                     onClick={async () => {
                       await logout();
                       navigate('/login', { replace: true });
