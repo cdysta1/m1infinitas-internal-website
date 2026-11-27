@@ -162,6 +162,8 @@ export function ProjectCard({
 
           {!pending && !failed && (
             <div className="mt-2.5 flex items-center justify-between gap-2">
+              <ApplyButton project={project} variant="minimal" />
+
               <FavoriteCountButton
                 appearance="minimal"
                 data-onboarding="favorite-project"
@@ -171,9 +173,8 @@ export function ProjectCard({
                 disabled={favoritePending || pending}
                 aria-label={`${favorite ? t('取消收藏项目') : t('收藏项目')} ${project.title}`}
                 title={favorite ? t('取消收藏项目') : t('收藏项目')}
+                className="ml-auto"
               />
-
-              <ApplyButton project={project} variant="minimal" />
             </div>
           )}
         </div>
