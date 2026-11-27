@@ -96,7 +96,7 @@ export function MembersPage() {
   return (
     <AppShell showCreate={false}>
       <DirectoryTabs />
-      <div className="mx-auto max-w-6xl px-4 pb-10">
+      <div className="page-enter mx-auto max-w-6xl px-4 pb-10">
         <div role="search" aria-label={t('搜索成员')} className="sticky top-14 z-20 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur">
           <label htmlFor="member-search-query" className="sr-only">{t('搜索姓名、方向或专长')}</label>
           <div data-onboarding="member-search" className="flex h-12 items-center gap-2 rounded-full bg-muted px-3 transition-shadow focus-within:ring-2 focus-within:ring-ring">

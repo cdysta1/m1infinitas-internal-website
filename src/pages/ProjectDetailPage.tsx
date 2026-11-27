@@ -158,7 +158,7 @@ export function ProjectDetailPage() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-6 md:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.85fr)] md:items-start md:gap-10 md:py-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.78fr)] lg:gap-14 lg:py-10">
+      <div className="page-detail-enter mx-auto grid max-w-6xl gap-8 px-4 py-6 md:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.85fr)] md:items-start md:gap-10 md:py-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.78fr)] lg:gap-14 lg:py-10">
         {/* Minimal Exhibition Media */}
         <section className="order-2 min-w-0 md:order-1" aria-labelledby="project-media-heading">
           <div className="mb-3 flex items-center justify-between border-b pb-2 font-mono text-[9px] uppercase text-muted-foreground">

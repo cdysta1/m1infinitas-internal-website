@@ -161,7 +161,7 @@ export function GalleryPage() {
       )}
     >
       <DirectoryTabs />
-      <div className="relative mx-auto max-w-6xl px-4 py-4 sm:py-6">
+      <div className="page-enter relative mx-auto max-w-6xl px-4 py-4 sm:py-6">
         {/* Desktop sticky morphing publish CTA: top capsule at y=0, smoothly shrinks into a circle while scrolling */}
         <div className="pointer-events-none sticky top-[4.5rem] z-20 hidden h-0 justify-end sm:flex">
           <button
@@ -204,13 +204,17 @@ export function GalleryPage() {
 
         {/* Quiet editorial filter & sort toolbar */}
         <div
-          data-onboarding="project-filters"
           className={cn(
             'mb-5 flex min-h-9 items-center justify-between gap-4 text-xs sm:mb-7',
             language === 'en' ? 'sm:pr-40' : 'sm:pr-32',
           )}
         >
-          <div role="group" aria-label={t('按项目状态筛选')} className="flex items-center gap-5">
+          <div
+            role="group"
+            data-onboarding="project-filters"
+            aria-label={t('按项目状态筛选')}
+            className="flex items-center gap-5"
+          >
             {STATUS_OPTIONS.map((option) => (
               <button
                 key={option.id}
@@ -271,7 +275,7 @@ export function GalleryPage() {
             )}
           />
         ) : (
-          <>
+          <div key={`${statusFilter}:${sortBy}`} className="panel-enter">
             <MasonryGrid>
               {displayedProjects.map((p) => (
                 <ProjectCard
@@ -300,7 +304,7 @@ export function GalleryPage() {
             {!hasNextPage && displayedProjects.length > 0 && (
               <div className="mt-10 text-center font-mono text-[11px] text-muted-foreground/60">{t('— 到底啦 —')}</div>
             )}
-          </>
+          </div>
         )}
 
         {!isLoading && displayedProjects.length > 0 && (

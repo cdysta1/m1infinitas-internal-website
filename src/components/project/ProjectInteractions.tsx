@@ -183,18 +183,20 @@ export function FavoriteCountButton({
         onToggle();
       }}
       className={cn(
-        'relative isolate inline-flex shrink-0 items-center justify-center tabular-nums transition-[color,border-color,background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:cursor-wait motion-reduce:transition-none motion-reduce:active:scale-100',
+        'relative isolate inline-flex shrink-0 items-center justify-center tabular-nums transition-[color,border-color,background-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:cursor-wait motion-reduce:transition-none motion-reduce:active:scale-100',
         minimal
           ? cn(
-              '-mx-2 -my-1.5 min-h-9 gap-1.5 rounded-lg px-2 text-xs sm:-mx-1.5 sm:-my-0.5 sm:min-h-7 sm:px-1.5',
-              favorite ? 'text-rose-600' : 'text-muted-foreground hover:text-foreground',
+              'min-h-8 gap-1.5 rounded-full px-2.5 text-xs font-medium sm:min-h-7',
+              favorite
+                ? 'bg-rose-500/12 text-rose-600 ring-1 ring-inset ring-rose-500/25'
+                : 'bg-muted/70 text-foreground/75 hover:bg-rose-50 hover:text-rose-600',
             )
           : cn(
-              'rounded-full border font-medium',
-              size === 'lg' ? 'h-10 gap-2 px-4 text-sm' : 'h-7 gap-1.5 px-2.5 text-xs',
+              'rounded-full font-medium',
+              size === 'lg' ? 'h-10 gap-2 px-4 text-sm' : 'h-8 gap-1.5 px-3 text-xs',
               favorite
-                ? 'border-rose-200 bg-rose-50/70 text-rose-600'
-                : 'border-border bg-background text-muted-foreground hover:border-foreground/50 hover:text-foreground',
+                ? 'bg-rose-500 text-white shadow-[0_6px_18px_rgba(244,63,94,0.28)] hover:bg-rose-600'
+                : 'bg-muted/70 text-foreground/85 hover:bg-rose-50 hover:text-rose-600',
             ),
         disabled && !feedback && 'opacity-50',
         className,
@@ -211,7 +213,13 @@ export function FavoriteCountButton({
             feedback?.kind === 'unlike' && 'favorite-heart-unlike',
           )}
         >
-          <Heart className={cn(size === 'lg' ? 'h-4 w-4' : 'h-3.5 w-3.5', favorite && 'fill-current')} />
+          <Heart
+            strokeWidth={2}
+            className={cn(
+              size === 'lg' ? 'h-[18px] w-[18px]' : 'h-[15px] w-[15px]',
+              favorite && (minimal ? 'fill-rose-500 text-rose-500' : 'fill-current'),
+            )}
+          />
         </span>
         {feedback?.kind === 'like' && (
           <span key={`burst-${feedback.id}`} aria-hidden="true" className="favorite-burst pointer-events-none absolute inset-0">
@@ -632,6 +640,7 @@ export function SubmissionInbox({
         )}
       </div>
 
+      <div key={`${box}:${activeFilter ?? 'all'}`} className="panel-enter">
       {box === 'received' ? (
         received.isError ? (
           <div className="rounded-2xl bg-muted/35 px-6 py-12 text-center text-sm text-muted-foreground">
@@ -702,6 +711,7 @@ export function SubmissionInbox({
           ))}
         </div>
       )}
+      </div>
     </section>
   );
 }

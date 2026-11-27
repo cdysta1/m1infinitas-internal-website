@@ -57,10 +57,10 @@ export function FavoriteButton({
         onToggle();
       }}
       className={cn(
-        'relative isolate flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-[background-color,border-color,color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90 disabled:cursor-wait motion-reduce:transition-none motion-reduce:active:scale-100',
+        'relative isolate flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-90 disabled:cursor-wait motion-reduce:transition-none motion-reduce:active:scale-100',
         favorite
-          ? 'border-rose-200 bg-rose-50 text-rose-600'
-          : 'border-border bg-background text-muted-foreground hover:border-foreground hover:text-foreground',
+          ? 'border-rose-200 bg-rose-50 text-rose-600 shadow-[0_2px_10px_rgba(244,63,94,0.18)]'
+          : 'border-border bg-background text-foreground/65 hover:border-rose-200 hover:bg-rose-50/70 hover:text-rose-500',
         disabled && !feedback && 'opacity-50',
         className,
       )}
@@ -74,7 +74,7 @@ export function FavoriteButton({
           feedback?.kind === 'unlike' && 'favorite-heart-unlike',
         )}
       >
-        <Heart className={cn('h-4 w-4', favorite && 'fill-current', iconClassName)} />
+        <Heart strokeWidth={2} className={cn('h-4 w-4', favorite && 'fill-rose-500 text-rose-500', iconClassName)} />
       </span>
       {feedback?.kind === 'like' && (
         <span key={`burst-${feedback.id}`} aria-hidden="true" className="favorite-burst pointer-events-none absolute inset-0">

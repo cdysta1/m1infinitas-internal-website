@@ -291,6 +291,8 @@ export const EN_MESSAGES: Record<string, string> = {
   '− 收起，+ 展开。': '- Compact, + expanded.',
   '按姓名或标签查找。': 'Search by name or skill.',
   '下一个功能提示': 'Next feature tip',
+  '下一步': 'Next',
+  '知道了': 'Got it',
   '关闭本页提示': 'Dismiss tips for this page',
   '任意处继续': 'Tap anywhere to continue',
   '收藏项目加载失败': 'Could not load saved projects.',

@@ -65,7 +65,7 @@ export function ProjectCard({
                 src={coverUrl}
                 alt={project.title}
                 wrapperClassName="h-full w-full sm:h-auto"
-                imgClassName="object-cover transition-opacity duration-500 group-hover:opacity-95"
+                imgClassName="object-cover transition-[opacity,transform] duration-500 ease-out group-hover:scale-[1.02] group-hover:opacity-95 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               />
             ) : (
               <div className="flex aspect-[4/5] w-full items-center justify-center text-muted-foreground sm:aspect-square">

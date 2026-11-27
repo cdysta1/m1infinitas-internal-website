@@ -255,9 +255,11 @@ export function MePage() {
     { id: 'profile', label: '资料' },
   ];
 
+  const activeTabIndex = Math.max(0, tabs.findIndex((tab) => tab.id === activeTab));
+
   return (
     <AppShell showCreate={false} onSwipeBack={returnToGallery}>
-      <div className="mx-auto max-w-4xl px-4 py-6">
+      <div className="page-enter mx-auto max-w-4xl px-4 py-6">
         <div className="mb-5 flex items-center">
           <Button
             type="button"
@@ -361,12 +363,21 @@ export function MePage() {
           </div>
         </header>
 
-        {/* Soft Borderless Segmented Tab Bar (large touch targets on mobile, no clipped focus ring) */}
+        {/* Soft Borderless Segmented Tab Bar with smooth sliding indicator */}
         <nav
           data-onboarding="me-tabs"
           aria-label={t('个人看板分区')}
-          className="mt-5 grid grid-cols-4 gap-1 rounded-2xl bg-muted/50 p-1.5"
+          className="relative mt-5 grid grid-cols-4 rounded-2xl bg-muted/50 p-1.5"
         >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-1.5 left-1.5 rounded-xl bg-background shadow-sm transition-transform duration-300 motion-reduce:transition-none"
+            style={{
+              width: 'calc((100% - 0.75rem) / 4)',
+              transform: `translateX(${activeTabIndex * 100}%)`,
+              transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          />
           {tabs.map((tab) => {
             const selected = activeTab === tab.id;
             return (
@@ -376,10 +387,10 @@ export function MePage() {
                 aria-current={selected ? 'page' : undefined}
                 onClick={() => selectTab(tab.id)}
                 className={cn(
-                  'relative flex min-h-11 items-center justify-center gap-1 rounded-xl px-1.5 transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-sm',
+                  'relative z-10 flex min-h-11 items-center justify-center gap-1 rounded-xl px-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-sm',
                   language === 'en' ? 'text-xs' : 'text-[13px]',
                   selected
-                    ? 'bg-background font-medium text-foreground shadow-sm'
+                    ? 'font-medium text-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -402,6 +413,7 @@ export function MePage() {
           })}
         </nav>
 
+        <div key={activeTab} className="panel-enter">
         {/* Tab 1: Inbox */}
         {activeTab === 'inbox' && (
           <div className="mt-6">
@@ -820,6 +832,7 @@ export function MePage() {
             )}
           </div>
         )}
+        </div>
       </div>
     </AppShell>
   );
