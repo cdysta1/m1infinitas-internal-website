@@ -410,13 +410,13 @@ export function EditProjectDrawer({
                     )}
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden />
-                    {t('已完成')}
+                    {t('已结束')}
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {status === 'active'
                     ? t('展示在画廊并接收成员投递')
-                    : t('归档至已完成列表并停止接收投递')}
+                    : t('归档至已结束列表并停止接收投递')}
                 </p>
               </div>
 

@@ -27,7 +27,7 @@ type GallerySort = 'latest' | 'hot';
 
 const STATUS_OPTIONS: { id: ProjectStatusFilter; label: string }[] = [
   { id: 'active', label: '进行中' },
-  { id: 'done', label: '已完成' },
+  { id: 'done', label: '已结束' },
   { id: 'all', label: '全部' },
 ];
 
@@ -135,7 +135,7 @@ export function GalleryPage() {
   }, [sentinel, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const emptyTitle = statusFilter === 'done'
-    ? t('还没有已完成的项目')
+    ? t('还没有已结束的项目')
     : statusFilter === 'all'
       ? t('还没有发布项目')
       : t('还没有进行中的项目');
@@ -265,7 +265,7 @@ export function GalleryPage() {
         ) : displayedProjects.length === 0 ? (
           <EmptyState
             title={emptyTitle}
-            description={statusFilter === 'done' ? t('已标记完成的项目会归档显示在这里。') : t('点击右下角 + 号，发布第一个项目')}
+            description={statusFilter === 'done' ? t('已标记结束的项目会归档显示在这里。') : t('点击右下角 + 号，发布第一个项目')}
             action={statusFilter === 'done' ? (
               <Button size="sm" variant="outline" onClick={() => setStatusFilter('active')}>
                 {t('查看进行中的项目')}

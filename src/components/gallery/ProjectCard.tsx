@@ -79,7 +79,7 @@ export function ProjectCard({
 
             {isDone && !pending && !failed && (
               <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                {t('已完成')}
+                {t('已结束')}
               </span>
             )}
 
@@ -105,7 +105,7 @@ export function ProjectCard({
                   )}
                 >
                   <span className="font-mono text-[9px] uppercase tracking-wider text-white/80">
-                    {isDone ? t('已完成') : t('进行中')}
+                    {isDone ? t('已结束') : t('进行中')}
                   </span>
                   <span className="shrink-0 font-mono text-[10px] text-white/70">{timeText}</span>
                 </div>

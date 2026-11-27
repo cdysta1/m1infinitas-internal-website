@@ -300,7 +300,7 @@ export function ProjectDetailPage() {
                 />
               ) : isDone ? (
                 <p className="flex-1 text-xs text-muted-foreground">
-                  {t('项目已完成，已停止投递')}
+                  {t('项目已结束，已停止投递')}
                 </p>
               ) : (
                 <ApplyButton project={project} variant="primary" data-onboarding="detail-apply" />
@@ -332,7 +332,7 @@ export function ProjectDetailPage() {
                 ) : (
                   <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
                 )}
-                <span>{isDone ? t('恢复为进行中') : t('标记为已完成')}</span>
+                <span>{isDone ? t('恢复为进行中') : t('标记为已结束')}</span>
               </button>
             )}
           </div>

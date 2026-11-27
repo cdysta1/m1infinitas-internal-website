@@ -39,7 +39,7 @@ const PROJECT_GUIDE: PageGuide = {
       id: 'project-filters',
       target: 'project-filters',
       title: '筛选与排序',
-      description: '切换进行中、已完成，或按热度查看。',
+      description: '切换进行中、已结束，或按热度查看。',
     },
     {
       id: 'favorite-project',
@@ -99,7 +99,7 @@ const PROFILE_GUIDE: PageGuide = {
       id: 'edit-project',
       target: 'edit-project',
       title: '编辑项目',
-      description: '修改文案媒体、切换完成状态或删除。',
+      description: '修改文案媒体、切换结束状态或删除。',
     },
   ],
 };

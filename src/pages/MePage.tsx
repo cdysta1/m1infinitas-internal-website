@@ -434,7 +434,7 @@ export function MePage() {
                 {([
                   { id: 'all', label: '全部', count: ownedProjects.length },
                   { id: 'active', label: '进行中', count: activeOwnedCount },
-                  { id: 'done', label: '已完成', count: doneOwnedCount },
+                  { id: 'done', label: '已结束', count: doneOwnedCount },
                 ] as const).map((option) => (
                   <button
                     key={option.id}
@@ -465,7 +465,7 @@ export function MePage() {
                 <Layers className="mx-auto mb-2.5 h-6 w-6 text-muted-foreground/45" aria-hidden />
                 <p className="text-sm text-muted-foreground">
                   {ownedFilter === 'done'
-                    ? t('还没有已完成的项目')
+                    ? t('还没有已结束的项目')
                     : ownedFilter === 'active'
                       ? t('还没有进行中的项目')
                       : t('还没有发布项目')}
@@ -534,7 +534,7 @@ export function MePage() {
                           type="button"
                           onClick={() => void toggleStatus(project)}
                           disabled={statusPendingId !== null}
-                          aria-label={isActive ? `${t('标记为已完成')} ${project.title}` : `${t('恢复为进行中')} ${project.title}`}
+                          aria-label={isActive ? `${t('标记为已结束')} ${project.title}` : `${t('恢复为进行中')} ${project.title}`}
                           className="inline-flex h-8 items-center gap-1.5 rounded-full bg-background/85 px-3 text-xs font-medium text-foreground/80 transition-colors hover:bg-background hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           {statusUpdating ? (
@@ -544,7 +544,7 @@ export function MePage() {
                           ) : (
                             <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
                           )}
-                          <span>{isActive ? t('标记完成') : t('恢复进行中')}</span>
+                          <span>{isActive ? t('标记结束') : t('恢复进行中')}</span>
                         </button>
 
                         <EditProjectDrawer

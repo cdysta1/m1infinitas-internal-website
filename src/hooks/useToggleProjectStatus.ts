@@ -35,7 +35,7 @@ export function useToggleProjectStatus() {
         queryClient.invalidateQueries({ queryKey: membersDirectoryKey }),
       ]);
       toast.success(
-        targetStatus === PROJECT_STATUS.DONE ? t('已标记为已完成') : t('已恢复为进行中'),
+        targetStatus === PROJECT_STATUS.DONE ? t('已标记为已结束') : t('已恢复为进行中'),
       );
     } catch (err) {
       toast.error(errorText(err, '项目状态更新失败'));

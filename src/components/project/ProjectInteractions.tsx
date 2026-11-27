@@ -120,7 +120,7 @@ export function ProjectStatusBadge({
           active ? 'bg-emerald-500' : 'bg-muted-foreground/50',
         )}
       />
-      {active ? t('进行中') : t('已完成')}
+      {active ? t('进行中') : t('已结束')}
     </span>
   );
 }
