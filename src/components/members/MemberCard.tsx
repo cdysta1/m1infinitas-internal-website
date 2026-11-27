@@ -1,8 +1,9 @@
 import { useI18n } from '@/app/I18nProvider';
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
-import { AtSign, ChevronDown, ChevronUp, Globe, Mail } from 'lucide-react';
+import { ArrowUpRight, AtSign, ChevronDown, ChevronUp, Globe, Mail } from 'lucide-react';
 import { SmartImage } from '@/components/common/SmartImage';
 import { FavoriteButton } from '@/components/common/FavoriteButton';
+import { MemberProjectsDialog } from '@/components/members/MemberPreviewDialogs';
 import { getAvatarUrl } from '@/lib/media';
 import type { MemberDirectoryProfile, MemberMeta } from '@/lib/memberDirectory';
 import type { Project } from '@/types/models';
@@ -34,8 +35,11 @@ export function MemberCard({
   const labelFor = (value: string) => translateMemberLabel(language, value);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [descriptionOverflows, setDescriptionOverflows] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
   const avatarUrl = getAvatarUrl(profile.avatar_file_id, profile.$id);
+  const hasProjects = projects.length > 0;
+  const projectCountLabel = `${String(projects.length).padStart(2, '0')} ${t('项目')}`;
   const transitionStyle = {
     viewTransitionName: `member-card-${profile.$id}`,
   } as CSSProperties;
@@ -65,7 +69,19 @@ export function MemberCard({
           imgClassName="object-cover"
         />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-semibold">{profile.name}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-sm font-semibold">{profile.name}</h2>
+            {hasProjects && (
+              <button
+                type="button"
+                onClick={() => setProjectsOpen(true)}
+                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border bg-background px-2 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {projectCountLabel}
+                <ArrowUpRight className="h-2.5 w-2.5" />
+              </button>
+            )}
+          </div>
           <div className="mt-2 flex flex-wrap gap-1.5" aria-label={t('{name} 的专长', { name: profile.name })}>
             {meta.tags.map((tag) => (
               <span
@@ -84,6 +100,14 @@ export function MemberCard({
           disabled={favoritePending}
           onToggle={onFavoriteToggle}
         />
+        {hasProjects && (
+          <MemberProjectsDialog
+            open={projectsOpen}
+            onOpenChange={setProjectsOpen}
+            memberName={profile.name}
+            projects={projects}
+          />
+        )}
       </article>
     );
   }
@@ -99,10 +123,27 @@ export function MemberCard({
           {labelFor(meta.areas[0] ?? 'M1')}
         </span>
         <div className="flex items-center gap-2">
-          <span className="flex items-center overflow-hidden rounded-full border font-mono text-[9px] text-muted-foreground">
-            <span className="border-r px-2 py-1">M1</span>
-            <span className="bg-muted px-2 py-1">{String(projects.length).padStart(2, '0')} {t('项目')}</span>
-          </span>
+          {hasProjects ? (
+            <button
+              type="button"
+              data-onboarding="member-projects"
+              onClick={() => setProjectsOpen(true)}
+              aria-label={t('查看 {name} 的公开项目', { name: profile.name })}
+              title={t('查看 {name} 的公开项目', { name: profile.name })}
+              className="group/proj flex items-center overflow-hidden rounded-full border font-mono text-[9px] text-foreground transition-colors hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="border-r px-2 py-1 text-muted-foreground">M1</span>
+              <span className="inline-flex items-center gap-0.5 bg-muted px-2 py-1 group-hover/proj:bg-foreground group-hover/proj:text-background transition-colors">
+                {projectCountLabel}
+                <ArrowUpRight className="h-2.5 w-2.5" />
+              </span>
+            </button>
+          ) : (
+            <span className="flex items-center overflow-hidden rounded-full border font-mono text-[9px] text-muted-foreground">
+              <span className="border-r px-2 py-1">M1</span>
+              <span className="bg-muted px-2 py-1">{projectCountLabel}</span>
+            </span>
+          )}
           <FavoriteButton
             aria-label={`${favorite ? t('取消收藏') : t('收藏')} ${profile.name}`}
             title={`${favorite ? t('取消收藏') : t('收藏')} ${profile.name}`}
@@ -210,6 +251,14 @@ export function MemberCard({
           </div>
         </div>
       </div>
+      {hasProjects && (
+        <MemberProjectsDialog
+          open={projectsOpen}
+          onOpenChange={setProjectsOpen}
+          memberName={profile.name}
+          projects={projects}
+        />
+      )}
     </article>
   );
 }

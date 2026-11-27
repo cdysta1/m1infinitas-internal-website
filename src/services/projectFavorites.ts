@@ -4,7 +4,7 @@ import { env } from '@/lib/env';
 import { updateAccountPreferences } from '@/services/preferences';
 
 const FAVORITE_PROJECT_IDS_KEY = 'favorite_project_ids';
-const DEMO_STORAGE_PREFIX = 'm1-infinitas-favorite-projects-v1';
+export const DEMO_STORAGE_PREFIX = 'm1-infinitas-favorite-projects-v1';
 
 type FavoritePreferences = Models.Preferences & {
   favorite_project_ids?: unknown;

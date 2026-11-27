@@ -1,5 +1,5 @@
 import { useI18n } from '@/app/I18nProvider';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/utils';
 
@@ -8,6 +8,10 @@ export function useCopyToClipboard(resetMs = 1600) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+  }, []);
 
   const copy = useCallback(
     async (text: string, message = t('已复制')) => {

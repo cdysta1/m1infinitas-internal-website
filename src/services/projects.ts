@@ -68,12 +68,35 @@ export async function getProject(id: string): Promise<Project> {
 
 export async function listProjectsByOwner(ownerId: string): Promise<Project[]> {
   if (env.demoMode) return demoListProjectsByOwner(ownerId);
-  const res = await databases.listDocuments<Project>(
-    DATABASE_ID,
-    COLLECTIONS.projects,
-    [Query.equal('owner_id', ownerId), Query.limit(100)],
-  );
-  return [...res.documents].sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  const all: Project[] = [];
+  let cursor: string | undefined;
+  do {
+    const queries = [Query.equal('owner_id', ownerId), Query.limit(100)];
+    if (cursor) queries.push(Query.cursorAfter(cursor));
+    const res = await databases.listDocuments<Project>(
+      DATABASE_ID,
+      COLLECTIONS.projects,
+      queries,
+    );
+    all.push(...res.documents);
+    cursor = res.documents.length === 100 ? res.documents.at(-1)?.$id : undefined;
+  } while (cursor);
+  return all.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+// Fetch all non-anonymous projects so member cards can display accurate public
+// project counts without leaking anonymous project ownership.
+export async function listAllPublicProjects(): Promise<Project[]> {
+  const all: Project[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await listProjects({ limit: 100, cursor });
+    for (const project of page.projects) {
+      if (!project.is_anonymous) all.push(project);
+    }
+    cursor = page.cursor;
+  } while (cursor);
+  return all;
 }
 
 export async function createProject(input: CreateProjectInput): Promise<Project> {
@@ -145,6 +168,9 @@ export async function updateProjectStatus(
   id: string,
   status: ProjectStatus,
 ): Promise<Project> {
+  if (status !== PROJECT_STATUS.ACTIVE && status !== PROJECT_STATUS.DONE) {
+    throw new Error('无效的项目状态');
+  }
   if (env.demoMode) return demoUpdateProjectStatus(id, status);
   return databases.updateDocument<Project>(DATABASE_ID, COLLECTIONS.projects, id, {
     status,

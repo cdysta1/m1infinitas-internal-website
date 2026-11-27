@@ -1,5 +1,5 @@
 import { useI18n } from '@/app/I18nProvider';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -37,10 +37,17 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [images, setImages] = useState<PickedImage[]>([]);
+  const imagesRef = useRef<PickedImage[]>([]);
+  imagesRef.current = images;
 
-  // Reset state each time the drawer opens.
+  // Release blob URLs on unmount.
+  useEffect(() => () => {
+    imagesRef.current.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+  }, []);
+
+  // Reset state whenever the drawer closes (and is not uploading) or opens fresh.
   useEffect(() => {
-    if (open) {
+    if (!open && !createProject.isPending) {
       setAnonymous(false);
       setTitle('');
       setSummary('');
@@ -49,7 +56,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
         return [];
       });
     }
-  }, [open]);
+  }, [createProject.isPending, open]);
 
   const canSubmit =
     title.trim().length > 0 &&
@@ -82,7 +89,12 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!createProject.isPending) onOpenChange(nextOpen);
+      }}
+    >
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>{t('发布新项目')}</DrawerTitle>

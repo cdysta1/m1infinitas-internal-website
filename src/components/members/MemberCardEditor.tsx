@@ -28,7 +28,7 @@ export function MemberCardEditor({ member }: { member: MemberDirectoryEntry }) {
   const label = (tag: string) => translateMemberLabel(language, tag);
   const query = search.trim().toLocaleLowerCase();
   const options = MEMBER_TAG_OPTIONS.filter(tag =>
-    tag.includes(query) || label(tag).toLocaleLowerCase().includes(query));
+    tag.toLocaleLowerCase().includes(query) || label(tag).toLocaleLowerCase().includes(query));
   function toggle(tag: string) {
     setTags(tags.includes(tag) ? tags.filter(item => item !== tag) : [...tags, tag]);
   }
@@ -81,7 +81,7 @@ export function MemberCardEditor({ member }: { member: MemberDirectoryEntry }) {
             </div>
           </details>
         </fieldset>
-        <Button type="submit" disabled={!valid || saving}>{saving ? t('保存中…') : t('保存我的资料')}</Button>
+        <Button type="submit" size="lg" className="w-full rounded-full" disabled={!valid || saving}>{saving ? t('保存中…') : t('保存我的资料')}</Button>
       </fieldset>
     </form>
   );

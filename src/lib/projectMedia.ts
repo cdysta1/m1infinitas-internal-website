@@ -5,6 +5,7 @@ export type ProjectMediaKind = 'image' | 'video';
 export interface ProjectMediaSource {
   content: string;
   fileIds: string[];
+  authorId?: string;
   localPreviewUrls?: string[];
 }
 
@@ -44,8 +45,13 @@ function inferMediaKind(source: string): ProjectMediaKind {
 export function collectProjectMediaAssets(
   coverFileId: string,
   records: ProjectMediaSource[],
+  ownerId?: string,
 ): ProjectMediaAsset[] {
-  const canonical = records.find((record) => isProjectMediaRecord(record.content));
+  const canonical = records.find(
+    (record) =>
+      isProjectMediaRecord(record.content) &&
+      (!ownerId || !record.authorId || record.authorId === ownerId),
+  );
   const sources = canonical
     ? canonical.fileIds.length > 0
       ? canonical.fileIds
@@ -53,9 +59,11 @@ export function collectProjectMediaAssets(
     : [
         coverFileId,
         ...records.flatMap((record) =>
-          record.fileIds.length > 0
-            ? record.fileIds
-            : record.localPreviewUrls ?? [],
+          isProjectMediaRecord(record.content)
+            ? []
+            : record.fileIds.length > 0
+              ? record.fileIds
+              : record.localPreviewUrls ?? [],
         ),
       ];
   const kinds = canonical

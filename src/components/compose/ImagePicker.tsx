@@ -1,5 +1,5 @@
 import { useI18n } from '@/app/I18nProvider';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Plus, X, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { MAX_IMAGES_PER_POST } from '@/lib/constants';
@@ -32,14 +32,6 @@ export function ImagePicker({
   const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-
-  // Release blob URLs on unmount to avoid memory leaks.
-  useEffect(() => {
-    return () => {
-      value.forEach((v) => URL.revokeObjectURL(v.previewUrl));
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const addFiles = (files: FileList | File[]) => {
     const incoming = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));

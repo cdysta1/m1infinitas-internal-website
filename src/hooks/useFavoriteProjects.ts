@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { countsKey } from '@/services/projectInteractions';
 import { useI18n } from '@/app/I18nProvider';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -7,11 +9,14 @@ import {
 } from '@/services/projectFavorites';
 
 export function useFavoriteProjects(userId?: string) {
+  const cache = useQueryClient();
   const { t } = useI18n();
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(Boolean(userId));
   const [pendingId, setPendingId] = useState<string | null>(null);
   const favoriteIdsRef = useRef<string[]>([]);
+  const tRef = useRef(t);
+  tRef.current = t;
 
   useEffect(() => {
     let cancelled = false;
@@ -31,7 +36,7 @@ export function useFavoriteProjects(userId?: string) {
         setFavoriteIds(ids);
       })
       .catch(() => {
-        if (!cancelled) toast.error(t('收藏项目加载失败'));
+        if (!cancelled) toast.error(tRef.current('收藏项目加载失败'));
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -61,6 +66,7 @@ export function useFavoriteProjects(userId?: string) {
         const saved = await saveFavoriteProjectIds(userId, next);
         favoriteIdsRef.current = saved;
         setFavoriteIds(saved);
+        void cache.invalidateQueries({ queryKey: countsKey });
       } catch {
         favoriteIdsRef.current = previous;
         setFavoriteIds(previous);
@@ -69,7 +75,7 @@ export function useFavoriteProjects(userId?: string) {
         setPendingId(null);
       }
     },
-    [pendingId, userId, t],
+    [cache, pendingId, userId, t],
   );
 
   return {

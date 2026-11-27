@@ -13,6 +13,8 @@ export function useFavoriteMembers(userId?: string, members: MemberDirectoryEntr
   const [isLoading, setIsLoading] = useState(Boolean(userId));
   const [pendingId, setPendingId] = useState<string | null>(null);
   const favoriteIdsRef = useRef<string[]>([]);
+  const tRef = useRef(t);
+  tRef.current = t;
 
   useEffect(() => {
     let cancelled = false;
@@ -32,7 +34,7 @@ export function useFavoriteMembers(userId?: string, members: MemberDirectoryEntr
         setFavoriteIds(ids);
       })
       .catch(() => {
-        if (!cancelled) toast.error(t('收藏成员加载失败'));
+        if (!cancelled) toast.error(tRef.current('收藏成员加载失败'));
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);

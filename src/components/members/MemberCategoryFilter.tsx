@@ -158,17 +158,23 @@ export function MemberCategoryFilter({ members, selectedIds, onChange, showSelec
 
   return (
     <div ref={filterRef} data-member-category-filter>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto py-4" role="group" aria-label={t("按学科筛选")}>
-        <button
-          type="button"
-          aria-pressed={selectedIds.includes(ALL_MEMBERS_CATEGORY_ID)}
-          onClick={() => onChange(toggleMemberCategory(selectedIds, ALL_MEMBERS_CATEGORY_ID))}
-          className={cn(
-            'h-8 shrink-0 rounded-full border px-3 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            selectedIds.includes(ALL_MEMBERS_CATEGORY_ID) ? 'border-foreground bg-foreground text-background' : 'bg-background text-muted-foreground',
-          )}
-        >{t("全部")}</button>
-        {MEMBER_CATEGORIES.map(renderButton)}
+      <div className="relative">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto py-4 pr-8 lg:pr-0" role="group" aria-label={t("按学科筛选")}>
+          <button
+            type="button"
+            aria-pressed={selectedIds.includes(ALL_MEMBERS_CATEGORY_ID)}
+            onClick={() => onChange(toggleMemberCategory(selectedIds, ALL_MEMBERS_CATEGORY_ID))}
+            className={cn(
+              'h-8 shrink-0 rounded-full border px-3 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              selectedIds.includes(ALL_MEMBERS_CATEGORY_ID) ? 'border-foreground bg-foreground text-background' : 'bg-background text-muted-foreground',
+            )}
+          >{t("全部")}</button>
+          {MEMBER_CATEGORIES.map(renderButton)}
+        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background via-background/80 to-transparent lg:hidden"
+        />
       </div>
       {MEMBER_CATEGORIES.map(renderChildren)}
       {showSelections && selectedIds.length > 0 && (

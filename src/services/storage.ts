@@ -10,6 +10,29 @@ export interface UploadResult {
   size: number;
 }
 
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'video/mp4': 'mp4',
+  'video/quicktime': 'mov',
+};
+
+const ALLOWED_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'mov']);
+
+function resolveExtension(original: File): string {
+  const fromMime = MIME_TO_EXT[original.type.toLowerCase()];
+  const dotIdx = original.name.lastIndexOf('.');
+  const fromName = dotIdx > 0 ? original.name.slice(dotIdx + 1).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) : '';
+  if (fromName && ALLOWED_EXTS.has(fromName)) {
+    if (!fromMime || fromName === fromMime || (fromMime === 'jpg' && fromName === 'jpeg')) {
+      return fromName;
+    }
+  }
+  return fromMime || fromName || 'bin';
+}
+
 // Build a stable, sortable path prefix: {userId}/{yyyymmdd}/
 // Appwrite ignores slashes in fileId (must be a plain string), but embedding
 // the date+user in the filename helps manual cleanup later.
@@ -18,7 +41,7 @@ function buildFileName(userId: string, original: File): string {
   const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(
     now.getDate(),
   ).padStart(2, '0')}`;
-  const ext = (original.name.split('.').pop() || 'bin').toLowerCase().slice(0, 8);
+  const ext = resolveExtension(original);
   const safeUser = userId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 24) || 'anon';
   return `${safeUser}_${stamp}_${ID.unique()}.${ext}`;
 }

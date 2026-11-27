@@ -1,10 +1,12 @@
 import { useI18n } from '@/app/I18nProvider';
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
-import { createProject } from '@/services/projects';
+import { createProject, deleteProject } from '@/services/projects';
 import { createUpdate } from '@/services/updates';
 import { uploadMany } from '@/services/storage';
 import { useAuth } from './useAuth';
-import { projectsFeedKey, type FeedPage } from './useProjectsFeed';
+import { membersDirectoryKey } from './useMembersDirectory';
+import { ownedProjectsKey } from './useOwnedProjects';
+import { projectsFeedFilterKey, projectsFeedKey, type FeedPage } from './useProjectsFeed';
 import {
   MAX_PROJECT_SUMMARY_LENGTH,
   OPTIMISTIC,
@@ -58,14 +60,19 @@ export function useCreateProject() {
         is_anonymous: anonymous,
         owner_id: user.$id,
       });
-      await createUpdate({
-        project_id: project.$id,
-        content: serializeProjectMediaRecord(
-          files.map((file) => file.type.startsWith('video/') ? 'video' : 'image'),
-        ),
-        author_id: user.$id,
-        file_ids: uploads.map((upload) => upload.fileId),
-      });
+      try {
+        await createUpdate({
+          project_id: project.$id,
+          content: serializeProjectMediaRecord(
+            files.map((file) => file.type.startsWith('video/') ? 'video' : 'image'),
+          ),
+          author_id: user.$id,
+          file_ids: uploads.map((upload) => upload.fileId),
+        });
+      } catch (err) {
+        await deleteProject(project.$id).catch(() => undefined);
+        throw err;
+      }
       return { project };
     },
     onMutate: async ({ anonymous, title, summary, files, localPreviewUrls }) => {
@@ -77,7 +84,6 @@ export function useCreateProject() {
       // Cancel in-flight feed refetch to avoid clobbering our optimistic data.
       await qc.cancelQueries({ queryKey: projectsFeedKey });
 
-      const prevFeed = qc.getQueryData<InfiniteData<FeedPage>>(projectsFeedKey);
       const optimisticProject: Project = {
         $id: tempProjectId,
         $collectionId: '',
@@ -93,17 +99,20 @@ export function useCreateProject() {
         status: PROJECT_STATUS.ACTIVE,
         updated_at: nowIso,
       };
-      if (prevFeed && prevFeed.pages.length > 0) {
-        const first = prevFeed.pages[0];
-        const nextOwners = new Map<string, Profile>(first.owners);
-        if (owner && user) nextOwners.set(user.$id, owner);
-        qc.setQueryData<InfiniteData<FeedPage>>(projectsFeedKey, {
-          ...prevFeed,
-          pages: [
-            { ...first, projects: [optimisticProject, ...first.projects], owners: nextOwners },
-            ...prevFeed.pages.slice(1),
-          ],
-        });
+      for (const feedKey of [projectsFeedFilterKey('active'), projectsFeedFilterKey('all')]) {
+        const prevFeed = qc.getQueryData<InfiniteData<FeedPage>>(feedKey);
+        if (prevFeed && prevFeed.pages.length > 0) {
+          const first = prevFeed.pages[0];
+          const nextOwners = new Map<string, Profile>(first.owners);
+          if (owner && user) nextOwners.set(user.$id, owner);
+          qc.setQueryData<InfiniteData<FeedPage>>(feedKey, {
+            ...prevFeed,
+            pages: [
+              { ...first, projects: [optimisticProject, ...first.projects], owners: nextOwners },
+              ...prevFeed.pages.slice(1),
+            ],
+          });
+        }
       }
 
       // Seed the detail timeline cache so the transition to detail page is instant.
@@ -136,17 +145,19 @@ export function useCreateProject() {
     },
     onSuccess: async ({ project }, _vars, ctx) => {
       // Re-key caches: replace temp project id with real one.
-      const prevFeed = qc.getQueryData<InfiniteData<FeedPage>>(projectsFeedKey);
-      if (prevFeed) {
-        qc.setQueryData<InfiniteData<FeedPage>>(projectsFeedKey, {
-          ...prevFeed,
-          pages: prevFeed.pages.map((page) => ({
-            ...page,
-            projects: page.projects.map((p) =>
-              p.$id === ctx.tempProjectId ? project : p,
-            ),
-          })),
-        });
+      for (const feedKey of [projectsFeedFilterKey('active'), projectsFeedFilterKey('all')]) {
+        const prevFeed = qc.getQueryData<InfiniteData<FeedPage>>(feedKey);
+        if (prevFeed) {
+          qc.setQueryData<InfiniteData<FeedPage>>(feedKey, {
+            ...prevFeed,
+            pages: prevFeed.pages.map((page) => ({
+              ...page,
+              projects: page.projects.map((p) =>
+                p.$id === ctx.tempProjectId ? project : p,
+              ),
+            })),
+          });
+        }
       }
 
       // Move the optimistic timeline to the real project id.
@@ -167,42 +178,29 @@ export function useCreateProject() {
         qc.removeQueries({ queryKey: timelineKey(ctx.tempProjectId) });
       }
 
-      await qc.invalidateQueries({ queryKey: timelineKey(project.$id) });
-      qc.invalidateQueries({ queryKey: projectsFeedKey });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: timelineKey(project.$id) }),
+        qc.invalidateQueries({ queryKey: projectsFeedKey }),
+        qc.invalidateQueries({ queryKey: ownedProjectsKey(project.owner_id) }),
+        qc.invalidateQueries({ queryKey: membersDirectoryKey }),
+      ]);
     },
     onError: (_err, _vars, ctx) => {
       if (!ctx) return;
-      // Mark the seeded timeline entry as failed so the UI can offer a retry.
-      qc.setQueryData<InfiniteData<TimelinePage>>(
-        timelineKey(ctx.tempProjectId),
-        (old) => {
+      qc.removeQueries({ queryKey: timelineKey(ctx.tempProjectId) });
+      // Remove the failed optimistic placeholder from the feed so no broken card lingers.
+      for (const feedKey of [projectsFeedFilterKey('active'), projectsFeedFilterKey('all')]) {
+        qc.setQueryData<InfiniteData<FeedPage>>(feedKey, (old) => {
           if (!old) return old;
           return {
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              entries: page.entries.map((e) =>
-                e.id === ctx.tempUpdateId ? { ...e, status: OPTIMISTIC.FAILED } : e,
-              ),
+              projects: page.projects.filter((p) => p.$id !== ctx.tempProjectId),
             })),
           };
-        },
-      );
-      // Also mark the feed project as failed via a soft flag on the summary text.
-      qc.setQueryData<InfiniteData<FeedPage>>(projectsFeedKey, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            projects: page.projects.map((p) =>
-              p.$id === ctx.tempProjectId
-                ? { ...p, summary: `[发布失败] ${p.summary}` }
-                : p,
-            ),
-          })),
-        };
-      });
+        });
+      }
     },
   });
 }

@@ -1,5 +1,5 @@
 import { useI18n } from '@/app/I18nProvider';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface SmartImageProps {
@@ -17,15 +17,24 @@ interface SmartImageProps {
 // an explicit "加载失败" state instead.
 export function SmartImage({ src, alt, wrapperClassName, imgClassName }: SmartImageProps) {
   const { t } = useI18n();
+  const imgRef = useRef<HTMLImageElement | null>(null);
   const [loadedSrc, setLoadedSrc] = useState<string>();
   const [failedSrc, setFailedSrc] = useState<string>();
   const loaded = Boolean(src && src === loadedSrc);
   const failed = Boolean(src && src === failedSrc);
 
+  useLayoutEffect(() => {
+    const img = imgRef.current;
+    if (src && img && img.complete && img.naturalWidth > 0) {
+      setLoadedSrc(src);
+    }
+  }, [src]);
+
   return (
     <div className={cn('relative overflow-hidden bg-muted', wrapperClassName)}>
       {src && !failed && (
         <img
+          ref={imgRef}
           src={src}
           alt={alt}
           loading="lazy"

@@ -1,18 +1,27 @@
-import { useI18n } from '@/app/I18nProvider';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Copy, Loader2, Pencil } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CheckCircle2, Copy, Loader2, Pencil, RotateCcw } from 'lucide-react';
+import { useI18n } from '@/app/I18nProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { EmptyState } from '@/components/common/EmptyState';
+import { Lightbox } from '@/components/common/Lightbox';
 import { SmartImage } from '@/components/common/SmartImage';
-import { FavoriteButton } from '@/components/common/FavoriteButton';
+import { MemberProfileDialog } from '@/components/members/MemberPreviewDialogs';
 import { EditProjectDrawer } from '@/components/project/EditProjectDrawer';
+import {
+  ApplyButton,
+  FavoriteCountButton,
+  ProjectStatusBadge,
+  useProjectFavoriteCounts,
+} from '@/components/project/ProjectInteractions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useFavoriteProjects } from '@/hooks/useFavoriteProjects';
+import { useMembersDirectory } from '@/hooks/useMembersDirectory';
 import { useProjectDetail } from '@/hooks/useProjectDetail';
+import { useToggleProjectStatus } from '@/hooks/useToggleProjectStatus';
 import { useUpdatesTimeline } from '@/hooks/useUpdatesTimeline';
 import { MAX_PROJECT_SUMMARY_LENGTH } from '@/lib/constants';
 import { requestGalleryScrollRestore } from '@/lib/galleryScroll';
@@ -30,11 +39,13 @@ interface ProjectMedia {
 }
 
 function formatProjectDate(value: string, locale: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function ProjectDetailPage() {
@@ -43,20 +54,25 @@ export function ProjectDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { copy, copied } = useCopyToClipboard();
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const { project, owner, isLoading: projectLoading } = useProjectDetail(id);
+  const { pendingProjectId: statusPendingId, toggleStatus } = useToggleProjectStatus();
+  const { data: members = [] } = useMembersDirectory();
   const {
     entries,
     isLoading: mediaLoading,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useUpdatesTimeline(id);
+  } = useUpdatesTimeline(id, { includeAuthors: false });
   const {
     favoriteSet,
     isLoading: favoritesLoading,
     pendingId: favoritePendingId,
     toggleFavorite,
   } = useFavoriteProjects(user?.$id);
+  const counts = useProjectFavoriteCounts();
 
   const returnToGallery = () => {
     requestGalleryScrollRestore();
@@ -69,28 +85,40 @@ export function ProjectDetailPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
+    setLightboxIndex(null);
+    setOwnerDialogOpen(false);
   }, [id]);
 
   const media = useMemo<ProjectMedia[]>(() => {
     if (!project) return [];
-    return collectProjectMediaAssets(project.cover_file_id, entries).map((asset) => ({
+    return collectProjectMediaAssets(project.cover_file_id, entries, project.owner_id).map((asset) => ({
       key: asset.source,
       src: buildPreviewUrl(asset.source, 'detail'),
       kind: asset.kind,
     }));
   }, [entries, project]);
 
+  const imageSources = useMemo(
+    () => media.filter((item) => item.kind === 'image').map((item) => item.src),
+    [media],
+  );
+
+  const ownerMember = useMemo(() => {
+    if (!project || project.is_anonymous) return null;
+    return members.find((entry) => entry.accountId === project.owner_id) ?? null;
+  }, [members, project]);
+
   if (!projectLoading && !project) return <ProjectNotFound />;
 
   if (projectLoading || !project) {
     return (
       <AppShell showCreate={false} onSwipeBack={returnToGallery}>
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.72fr)] lg:px-8">
-          <div className="aspect-[4/5] animate-pulse bg-muted" />
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.85fr)] lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.78fr)]">
+          <div className="aspect-[4/5] animate-pulse rounded-xl bg-muted" />
           <div className="space-y-4">
-            <div className="h-3 w-28 animate-pulse bg-muted" />
-            <div className="h-10 w-4/5 animate-pulse bg-muted" />
-            <div className="h-24 w-full animate-pulse bg-muted" />
+            <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+            <div className="h-10 w-4/5 animate-pulse rounded-lg bg-muted" />
+            <div className="h-24 w-full animate-pulse rounded-xl bg-muted" />
           </div>
         </div>
       </AppShell>
@@ -101,39 +129,55 @@ export function ProjectDetailPage() {
   const ownerAvatar = project.is_anonymous ? undefined : getAvatarUrl(owner?.avatar_file_id, owner?.$id ?? project.owner_id);
   const favorite = favoriteSet.has(project.$id);
   const favoriteBusy = favoritesLoading || favoritePendingId !== null;
+  const favoriteCount = counts.data ? counts.data[project.$id] || 0 : undefined;
   const canEdit = user?.$id === project.owner_id;
+  const isDone = project.status === 'done';
+  const coverUrl = project.cover_file_id ? buildPreviewUrl(project.cover_file_id, 'cover') : undefined;
+  const updatedDateText = formatProjectDate(project.updated_at, locale);
+
+  const openImageLightbox = (src: string) => {
+    const idx = imageSources.indexOf(src);
+    if (idx >= 0) setLightboxIndex(idx);
+  };
 
   return (
     <AppShell showCreate={false} onSwipeBack={returnToGallery}>
       <div className="border-b">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:px-8">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={returnToGallery}
             className="-ml-3 gap-2 text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />{t('返回首页')}</Button>
-          <span className="font-mono text-[9px] uppercase text-muted-foreground">
+            <ArrowLeft className="h-4 w-4" />{t('返回首页')}
+          </Button>
+          <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
             {t('项目档案')}
           </span>
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.72fr)] lg:items-start lg:gap-12 lg:px-8 lg:py-10">
-        <section className="order-2 min-w-0 lg:order-1" aria-labelledby="project-media-heading">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-6 md:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.85fr)] md:items-start md:gap-10 md:py-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.78fr)] lg:gap-14 lg:py-10">
+        {/* Minimal Exhibition Media */}
+        <section className="order-2 min-w-0 md:order-1" aria-labelledby="project-media-heading">
           <div className="mb-3 flex items-center justify-between border-b pb-2 font-mono text-[9px] uppercase text-muted-foreground">
             <h2 id="project-media-heading" className="font-normal">{t('项目媒体')}</h2>
             <span>{String(media.length).padStart(2, '0')} {t('媒体')}</span>
           </div>
 
-          <div className="grid grid-cols-2 items-start gap-2 lg:gap-4">
+          <div
+            className={cn(
+              'grid items-start gap-3 md:gap-4',
+              media.length <= 2 ? 'grid-cols-1' : 'grid-cols-2',
+            )}
+          >
             {media.map((item, index) => (
               <figure
                 key={item.key}
                 className={cn(
-                  'relative min-w-0 self-start bg-muted',
-                  item.kind === 'video' && 'col-span-2',
+                  'group relative min-w-0 self-start overflow-hidden rounded-xl bg-muted ring-1 ring-inset ring-black/[0.04]',
+                  media.length > 2 && (index === 0 || item.kind === 'video') && 'col-span-2',
                 )}
               >
                 {item.kind === 'video' ? (
@@ -146,21 +190,30 @@ export function ProjectDetailPage() {
                     preload="metadata"
                   />
                 ) : (
-                  <SmartImage
-                    src={item.src}
-                    alt={t('{name}，项目图像 {index}', { name: project.title, index: index + 1 })}
-                    wrapperClassName="w-full min-h-40"
-                    imgClassName="h-auto w-full object-contain"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => openImageLightbox(item.src)}
+                    aria-label={t('查看大图：{name}', { name: `${project.title} ${index + 1}` })}
+                    className="block w-full cursor-zoom-in text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <SmartImage
+                      src={item.src}
+                      alt={t('{name}，项目图像 {index}', { name: project.title, index: index + 1 })}
+                      wrapperClassName="w-full min-h-40"
+                      imgClassName="h-auto w-full object-contain"
+                    />
+                  </button>
                 )}
-                <figcaption className="absolute bottom-2 right-2 bg-background/90 px-2 py-1 font-mono text-[9px] text-foreground backdrop-blur-sm">
-                  {String(index + 1).padStart(2, '0')} / {String(media.length).padStart(2, '0')}
-                </figcaption>
+                {media.length > 1 && (
+                  <figcaption className="pointer-events-none absolute bottom-2.5 right-2.5 rounded-full bg-background/90 px-2.5 py-0.5 font-mono text-[9px] text-foreground backdrop-blur-sm">
+                    {String(index + 1).padStart(2, '0')} / {String(media.length).padStart(2, '0')}
+                  </figcaption>
+                )}
               </figure>
             ))}
 
             {mediaLoading && media.length <= 1 && (
-              <div className="col-span-2 flex min-h-32 items-center justify-center bg-muted text-muted-foreground">
+              <div className="col-span-full flex min-h-32 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span className="sr-only">{t('正在加载项目媒体')}</span>
               </div>
@@ -168,86 +221,189 @@ export function ProjectDetailPage() {
           </div>
         </section>
 
-        <aside className="order-1 min-w-0 lg:sticky lg:top-20 lg:order-2">
-          <div className="flex items-center justify-between gap-3 border-b pb-3">
-            <span className="font-mono text-[9px] uppercase text-muted-foreground">
-              {project.status === 'done' ? t('已完成的项目') : t('进行中的项目')}
-            </span>
-            <div className="flex items-center gap-2">
-              {canEdit && (
+        {/* Minimal Editorial Sidebar */}
+        <aside className="order-1 min-w-0 md:sticky md:top-20 md:order-2">
+          {/* Mobile horizontal hero: cover left, title & status right */}
+          <div className="flex gap-4 md:block">
+            {coverUrl && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (imageSources.length > 0) setLightboxIndex(0);
+                }}
+                aria-label={t('查看大图：{name}', { name: project.title })}
+                className="relative aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-inset ring-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-28 md:hidden"
+              >
+                <SmartImage
+                  src={coverUrl}
+                  alt={project.title}
+                  wrapperClassName="h-full w-full"
+                  imgClassName="object-cover"
+                />
+              </button>
+            )}
+
+            <div className="flex min-w-0 flex-1 flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-2 border-b pb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <ProjectStatusBadge status={project.status} size="xs" />
+                    {canEdit && project.is_anonymous && (
+                      <span className="font-mono text-[10px] text-muted-foreground">
+                        · {t('匿名')}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                    {updatedDateText}
+                  </span>
+                </div>
+
+                <h1 className="mt-3 break-words text-xl font-semibold leading-snug tracking-tight text-foreground sm:text-2xl md:mt-4 lg:mt-5 lg:text-3xl">
+                  {project.title}
+                </h1>
+              </div>
+
+              <div className="mt-2.5 flex items-center gap-2 md:hidden">
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={ownerAvatar} alt={ownerName} />
+                  <AvatarFallback className="text-[9px]">{ownerName.slice(0, 1).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <span className="truncate text-xs text-muted-foreground">{ownerName}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary */}
+          <p className="mt-5 whitespace-pre-line break-words text-[15px] leading-7 text-muted-foreground">
+            {project.summary.slice(0, MAX_PROJECT_SUMMARY_LENGTH)}
+          </p>
+
+          {/* Clean Action Row */}
+          <div className="mt-6 space-y-2.5">
+            <div className="flex items-center gap-3">
+              {canEdit ? (
                 <EditProjectDrawer
                   project={project}
                   trigger={(
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
+                      variant="default"
+                      size="md"
+                      className="h-10 flex-1 gap-2 rounded-full px-5 text-sm font-medium"
                       aria-label={t('编辑项目 {name}', { name: project.title })}
                       title={t('编辑项目')}
                     >
-                      <Pencil className="h-3.5 w-3.5" />{t('编辑')}</Button>
+                      <Pencil className="h-3.5 w-3.5" />
+                      {t('编辑项目')}
+                    </Button>
                   )}
                 />
+              ) : isDone ? (
+                <p className="flex-1 text-xs text-muted-foreground">
+                  {t('项目已完成，已停止投递')}
+                </p>
+              ) : (
+                <ApplyButton project={project} variant="primary" data-onboarding="detail-apply" />
               )}
-              <FavoriteButton
+
+              <FavoriteCountButton
+                size="lg"
+                appearance="pill"
                 favorite={favorite}
+                count={favoriteCount}
                 onToggle={() => void toggleFavorite(project.$id)}
                 disabled={favoriteBusy}
                 aria-label={`${favorite ? t('取消收藏项目') : t('收藏项目')} ${project.title}`}
                 title={favorite ? t('取消收藏项目') : t('收藏项目')}
-                className="h-9 w-9"
               />
             </div>
+
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => void toggleStatus(project)}
+                disabled={statusPendingId !== null}
+                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-muted/55 px-4 text-xs font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {statusPendingId === project.$id ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : isDone ? (
+                  <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                ) : (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+                <span>{isDone ? t('恢复为进行中') : t('标记为已完成')}</span>
+              </button>
+            )}
           </div>
 
-          <h1 className="mt-6 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-            {project.title}
-          </h1>
-          <p className="mt-5 whitespace-pre-line text-[15px] leading-7 text-muted-foreground">
-            {project.summary.slice(0, MAX_PROJECT_SUMMARY_LENGTH)}
-          </p>
-
+          {/* Hairline-separated Owner & Soft WeChat Action */}
           <div className="mt-8 border-t pt-5">
-            <p className="font-mono text-[9px] uppercase text-muted-foreground">{t('项目负责人')}</p>
-            <div className="mt-3 flex items-center gap-3">
-              <Avatar className="h-11 w-11">
-                <AvatarImage src={ownerAvatar} alt={ownerName} />
-                <AvatarFallback>{ownerName.slice(0, 1).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{ownerName}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Project lead</p>
+            <p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+              {t('项目负责人')}
+            </p>
+            {ownerMember ? (
+              <button
+                type="button"
+                data-onboarding="detail-owner"
+                onClick={() => setOwnerDialogOpen(true)}
+                className="group -mx-2 mt-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarImage src={ownerAvatar} alt={ownerName} />
+                  <AvatarFallback>{ownerName.slice(0, 1).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium group-hover:underline underline-offset-4">
+                  {ownerName}
+                </span>
+                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+              </button>
+            ) : (
+              <div className="mt-3 flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={ownerAvatar} alt={ownerName} />
+                  <AvatarFallback>{ownerName.slice(0, 1).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <p className="truncate text-sm font-medium">{ownerName}</p>
               </div>
-            </div>
+            )}
           </div>
 
           {!project.is_anonymous && owner?.wechat && (
             <button
               type="button"
               onClick={() => copy(owner.wechat, t('微信号已复制'))}
-              className="mt-5 flex w-full items-center justify-between gap-4 border-y py-4 text-left transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="mt-4 flex w-full items-center justify-between gap-4 rounded-xl bg-muted/45 px-4 py-3.5 text-left transition-colors hover:bg-muted/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={t('复制微信号 {id}', { id: owner.wechat })}
             >
-              <span>
+              <span className="min-w-0">
                 <span className="block font-mono text-[9px] uppercase text-muted-foreground">{t('微信')}</span>
-                <span className="mt-1 block text-sm font-medium">{owner.wechat}</span>
+                <span className="mt-1 block truncate text-sm font-medium">{owner.wechat}</span>
               </span>
-              <Copy className={cn('h-4 w-4', copied && 'text-foreground')} />
+              <Copy className={cn('h-4 w-4 shrink-0 text-muted-foreground', copied && 'text-foreground')} />
             </button>
           )}
-
-          <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-b pb-5">
-            <div>
-              <dt className="font-mono text-[9px] uppercase text-muted-foreground">{t('媒体')}</dt>
-              <dd className="mt-1 text-sm">{String(media.length).padStart(2, '0')}</dd>
-            </div>
-            <div>
-              <dt className="font-mono text-[9px] uppercase text-muted-foreground">{t('更新日期')}</dt>
-              <dd className="mt-1 text-sm">{formatProjectDate(project.updated_at, locale)}</dd>
-            </div>
-          </dl>
         </aside>
       </div>
+
+      {lightboxIndex !== null && imageSources.length > 0 && (
+        <Lightbox
+          sources={imageSources}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
+        />
+      )}
+
+      {ownerMember && (
+        <MemberProfileDialog
+          open={ownerDialogOpen}
+          onOpenChange={setOwnerDialogOpen}
+          member={ownerMember}
+          wechat={owner?.wechat}
+          currentProjectId={project.$id}
+        />
+      )}
     </AppShell>
   );
 }

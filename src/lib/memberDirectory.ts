@@ -69,14 +69,17 @@ export function applyMemberBindings(
   members: MemberDirectoryEntry[],
   bindings: Map<string, string>,
   profiles: Map<string, Profile>,
+  projectsByOwner?: Map<string, Project[]>,
 ): MemberDirectoryEntry[] {
   return members.map((member) => {
     const accountId = bindings.get(member.profile.$id);
     if (!accountId) return member;
     const profile = profiles.get(accountId);
+    const ownedPublicProjects = projectsByOwner?.get(accountId);
     return {
       ...member,
       accountId,
+      projects: ownedPublicProjects ?? member.projects,
       meta: {
         ...member.meta,
         description: profile?.member_bio ?? member.meta.description,

@@ -97,10 +97,15 @@ export async function saveProjectMediaRecord(input: {
   fileIds: string[];
   mediaKinds: ProjectMediaKind[];
 }): Promise<UpdateItem> {
-  const existing = await listUpdatesByProject(input.projectId, { limit: 100 });
-  const mediaRecord = existing.updates.find(
-    (update) => isProjectMediaRecord(update.content),
-  );
+  let mediaRecord: UpdateItem | undefined;
+  let cursor: string | undefined;
+  do {
+    const page = await listUpdatesByProject(input.projectId, { limit: 100, cursor });
+    mediaRecord = page.updates.find(
+      (update) => update.author_id === input.authorId && isProjectMediaRecord(update.content),
+    );
+    cursor = mediaRecord ? undefined : page.cursor;
+  } while (cursor);
   const content = serializeProjectMediaRecord(input.mediaKinds);
 
   if (mediaRecord) {
@@ -123,18 +128,26 @@ export async function deleteUpdate(id: string): Promise<void> {
   await databases.deleteDocument(DATABASE_ID, COLLECTIONS.updates, id);
 }
 
+export type RealtimeUpdateAction = 'create' | 'update' | 'delete';
+
 // Subscribe to realtime create/update/delete events on the updates collection.
 // The channel is scoped to the whole collection; callers must filter by
 // project_id themselves (Appwrite does not support server-side filtering here).
 export function subscribeUpdates(
-  handler: (payload: RealtimeUpdatePayload) => void,
+  handler: (payload: RealtimeUpdatePayload, action: RealtimeUpdateAction) => void,
 ): () => void {
   if (env.demoMode) return demoSubscribeUpdates(handler);
   const channel = `databases.${DATABASE_ID}.collections.${COLLECTIONS.updates}.documents`;
   return realtime.subscribe<RealtimeUpdatePayload>([channel], (event) => {
     const payload = event.payload;
     if (!payload) return;
-    handler(payload);
+    const events = event.events ?? [];
+    const action: RealtimeUpdateAction = events.some((item) => item.endsWith('.delete'))
+      ? 'delete'
+      : events.some((item) => item.endsWith('.update'))
+        ? 'update'
+        : 'create';
+    handler(payload, action);
   });
 }
 

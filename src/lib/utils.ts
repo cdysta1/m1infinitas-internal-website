@@ -21,6 +21,7 @@ const relativeTimeFormatters = {
 export function formatRelativeTime(input: string | number | Date, language: Language = 'zh'): string {
   const formatter = relativeTimeFormatters[language];
   const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) return '';
   const now = Date.now();
   const diffMs = date.getTime() - now;
   const absMin = Math.abs(diffMs) / 60_000;
@@ -40,6 +41,7 @@ export function formatRelativeTime(input: string | number | Date, language: Lang
 // Absolute datetime for timeline headers.
 export function formatDateTime(input: string | number | Date, language: Language = 'zh'): string {
   const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', {
     year: 'numeric',
     month: '2-digit',

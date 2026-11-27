@@ -4,8 +4,10 @@ import { applyMemberBindings, buildMembersDirectory, type MemberDirectoryEntry }
 import { DATABASE_ID, databases } from '@/lib/appwrite';
 import { env } from '@/lib/env';
 import { getProfilesByIds } from '@/services/profiles';
+import { listAllPublicProjects } from '@/services/projects';
 import { DEMO_USER_ID } from '@/demo/store';
 import { useAuth } from '@/hooks/useAuth';
+import type { Project } from '@/types/models';
 
 export type { MemberDirectoryEntry } from '@/lib/memberDirectory';
 
@@ -22,8 +24,20 @@ function initialDirectory() {
   return members;
 }
 
+function groupProjectsByOwner(projects: Project[]): Map<string, Project[]> {
+  const byOwner = new Map<string, Project[]>();
+  for (const project of projects) {
+    if (project.is_anonymous) continue;
+    const list = byOwner.get(project.owner_id);
+    if (list) list.push(project);
+    else byOwner.set(project.owner_id, [project]);
+  }
+  return byOwner;
+}
+
 async function loadDirectory(): Promise<MemberDirectoryEntry[]> {
   const members = initialDirectory();
+  const publicProjectsPromise = listAllPublicProjects().catch(() => [] as Project[]);
   if (env.demoMode) {
     const id = 'demo-member-lucian';
     members.push({
@@ -31,7 +45,16 @@ async function loadDirectory(): Promise<MemberDirectoryEntry[]> {
       meta: { description: '分享我的音乐与创作。', focus: '', tags: ['电子音乐'], areas: ['音乐'], contacts: [] },
       aliases: [], projects: [],
     });
-    return applyMemberBindings(members, new Map([[id, DEMO_USER_ID]]), await getProfilesByIds([DEMO_USER_ID]));
+    const [profiles, publicProjects] = await Promise.all([
+      getProfilesByIds([DEMO_USER_ID]),
+      publicProjectsPromise,
+    ]);
+    return applyMemberBindings(
+      members,
+      new Map([[id, DEMO_USER_ID]]),
+      profiles,
+      groupProjectsByOwner(publicProjects),
+    );
   }
   const bindings = new Map<string, string>();
   for (let start = 0; start < members.length; start += 50) {
@@ -56,7 +79,16 @@ async function loadDirectory(): Promise<MemberDirectoryEntry[]> {
       if (row.bound_user_id) bindings.set(row.$id, row.bound_user_id);
     }
   }
-  return applyMemberBindings(members, bindings, await getProfilesByIds([...bindings.values()]));
+  const [profiles, publicProjects] = await Promise.all([
+    getProfilesByIds([...bindings.values()]),
+    publicProjectsPromise,
+  ]);
+  return applyMemberBindings(
+    members,
+    bindings,
+    profiles,
+    groupProjectsByOwner(publicProjects),
+  );
 }
 
 export function useMembersDirectory() {

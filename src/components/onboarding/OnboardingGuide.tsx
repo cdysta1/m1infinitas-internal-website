@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export const ONBOARDING_OPEN_EVENT = 'm1:open-onboarding';
 
-const COACHMARK_VERSION = 'v8';
+const COACHMARK_VERSION = 'v9';
 
 interface CoachmarkTip {
   id: string;
@@ -34,16 +34,52 @@ const PROJECT_GUIDE: PageGuide = {
   key: 'projects',
   tips: [
     {
+      id: 'project-filters',
+      target: 'project-filters',
+      title: '筛选与排序',
+      description: '切换进行中、已完成，或按热度查看。',
+    },
+    {
       id: 'favorite-project',
       target: 'favorite-project',
       title: '收藏项目',
-      description: '稍后在「我的」里查看。',
+      description: '点心收藏，同时累加项目热度。',
+    },
+    {
+      id: 'apply-project',
+      target: 'apply-project',
+      title: '直接投递',
+      description: '进行中的项目可直接投递名片参与。',
+    },
+    {
+      id: 'inbox-entry',
+      target: 'inbox-entry',
+      title: '投递收件箱',
+      description: '收到合作投递时会在这里提示。',
     },
     {
       id: 'create-project',
       target: 'create-project',
       title: '发布项目',
-      description: '从这里创建新项目。',
+      description: '从这里创建署名或匿名项目。',
+    },
+  ],
+};
+
+const PROJECT_DETAIL_GUIDE: PageGuide = {
+  key: 'project-detail',
+  tips: [
+    {
+      id: 'detail-apply',
+      target: 'detail-apply',
+      title: '参与项目',
+      description: '发送你的名片和留言给项目负责人。',
+    },
+    {
+      id: 'detail-owner',
+      target: 'detail-owner',
+      title: '查看负责人',
+      description: '点击可预览完整成员名片与作品。',
     },
   ],
 };
@@ -52,10 +88,16 @@ const PROFILE_GUIDE: PageGuide = {
   key: 'profile',
   tips: [
     {
+      id: 'me-tabs',
+      target: 'me-tabs',
+      title: '个人分区',
+      description: '切换收件箱、我的项目、收藏与资料。',
+    },
+    {
       id: 'edit-project',
       target: 'edit-project',
       title: '编辑项目',
-      description: '修改文案、图片和视频。',
+      description: '修改文案媒体、切换完成状态或删除。',
     },
   ],
 };
@@ -75,11 +117,18 @@ const MEMBERS_GUIDE: PageGuide = {
       title: '搜索成员',
       description: '按姓名或标签查找。',
     },
+    {
+      id: 'member-projects',
+      target: 'member-projects',
+      title: '查看作品',
+      description: '点击项目数可直达成员的公开项目。',
+    },
   ],
 };
 
 function getPageGuide(pathname: string): PageGuide | null {
   if (pathname === '/') return PROJECT_GUIDE;
+  if (pathname.startsWith('/projects/')) return PROJECT_DETAIL_GUIDE;
   if (pathname === '/me') return PROFILE_GUIDE;
   if (pathname === '/members') return MEMBERS_GUIDE;
   return null;

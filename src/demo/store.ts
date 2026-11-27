@@ -13,7 +13,7 @@ interface DemoState {
 }
 
 const projectListeners = new Set<() => void>();
-const updateListeners = new Set<(update: UpdateItem) => void>();
+const updateListeners = new Set<(update: UpdateItem, action: 'create' | 'update' | 'delete') => void>();
 let memoryState: DemoState | null = null;
 
 const DEFAULT_USER_NAMES = [
@@ -498,7 +498,10 @@ export async function demoListProfiles(limit = 100): Promise<Profile[]> {
   return getState().profiles.slice(0, limit);
 }
 
-export async function demoUpdateProfile(userId: string, patch: Partial<{ name: string; wechat: string; avatar_file_id: string }>): Promise<Profile> {
+export async function demoUpdateProfile(
+  userId: string,
+  patch: Partial<Pick<Profile, 'name' | 'wechat' | 'avatar_file_id' | 'member_bio' | 'member_tags'>>,
+): Promise<Profile> {
   const state = getState();
   const index = state.profiles.findIndex((profile) => profile.$id === userId);
   if (index < 0) throw new Error('演示成员不存在');
@@ -545,7 +548,13 @@ export async function demoDeleteProject(id: string): Promise<void> {
   projectListeners.forEach(listener => listener());
 }
 
-export async function demoCreateProject(input: { title: string; summary: string; cover_file_id: string; owner_id: string }): Promise<Project> {
+export async function demoCreateProject(input: {
+  title: string;
+  summary: string;
+  cover_file_id: string;
+  owner_id: string;
+  is_anonymous?: boolean;
+}): Promise<Project> {
   const now = new Date().toISOString();
   const project: Project = {
     ...metadata(uniqueId('project'), 'projects', now),
@@ -562,7 +571,7 @@ export async function demoCreateProject(input: { title: string; summary: string;
 
 export async function demoUpdateProject(
   id: string,
-  patch: Partial<Pick<Project, 'title' | 'summary' | 'cover_file_id'>>,
+  patch: Partial<Pick<Project, 'title' | 'summary' | 'cover_file_id' | 'status'>> & { is_anonymous?: false },
 ): Promise<Project> {
   const state = getState();
   const index = state.projects.findIndex((project) => project.$id === id);
@@ -594,9 +603,8 @@ export async function demoTouchProject(id: string): Promise<Project | null> {
 
 export async function demoUpdateProjectStatus(id: string, status: ProjectStatus): Promise<Project> {
   const project = await demoGetProject(id);
-  project.status = status;
-  await demoTouchProject(id);
-  return project;
+  if (project.owner_id !== DEMO_USER_ID) throw new Error('只能编辑自己发布的项目');
+  return demoUpdateProject(id, { status });
 }
 
 export function demoSubscribeProjects(listener: () => void): () => void {
@@ -629,7 +637,7 @@ export async function demoCreateUpdate(input: { project_id: string; content: str
   const state = getState();
   state.updates.unshift(update);
   persist();
-  updateListeners.forEach((listener) => listener(update));
+  updateListeners.forEach((listener) => listener(update, 'create'));
   return update;
 }
 
@@ -648,17 +656,21 @@ export async function demoUpdateUpdate(
   };
   state.updates[index] = updated;
   persist();
-  updateListeners.forEach((listener) => listener(updated));
+  updateListeners.forEach((listener) => listener(updated, 'update'));
   return updated;
 }
 
 export async function demoDeleteUpdate(id: string): Promise<void> {
   const state = getState();
+  const removed = state.updates.find((update) => update.$id === id);
   state.updates = state.updates.filter((update) => update.$id !== id);
   persist();
+  if (removed) updateListeners.forEach((listener) => listener(removed, 'delete'));
 }
 
-export function demoSubscribeUpdates(listener: (update: UpdateItem) => void): () => void {
+export function demoSubscribeUpdates(
+  listener: (update: UpdateItem, action: 'create' | 'update' | 'delete') => void,
+): () => void {
   updateListeners.add(listener);
   return () => updateListeners.delete(listener);
 }

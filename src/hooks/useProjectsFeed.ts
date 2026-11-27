@@ -5,6 +5,8 @@ import { getProfilesByIds } from '@/services/profiles';
 import type { Profile, Project } from '@/types/models';
 import { PAGE_SIZE, PROJECT_STATUS } from '@/lib/constants';
 
+export type ProjectStatusFilter = 'active' | 'done' | 'all';
+
 export interface FeedPage {
   projects: Project[];
   owners: Map<string, Profile>;
@@ -13,24 +15,30 @@ export interface FeedPage {
 }
 
 export const projectsFeedKey = ['projects', 'feed'] as const;
+export const projectsFeedFilterKey = (filter: ProjectStatusFilter) =>
+  [...projectsFeedKey, filter] as const;
 
-// Infinite feed of active projects ordered by updated_at desc.
+// Infinite feed of projects ordered by updated_at desc.
 // Also resolves owner profiles in the same query so cards can render avatar/name.
-export function useProjectsFeed(enabled = true) {
+export function useProjectsFeed(
+  statusFilter: ProjectStatusFilter = PROJECT_STATUS.ACTIVE,
+  enabled = true,
+) {
+  const queryKey = projectsFeedFilterKey(statusFilter);
   const query = useInfiniteQuery<
     FeedPage,
     Error,
     InfiniteData<FeedPage>,
-    typeof projectsFeedKey,
+    ReturnType<typeof projectsFeedFilterKey>,
     string | undefined
   >({
-    queryKey: projectsFeedKey,
+    queryKey,
     enabled,
     initialPageParam: undefined,
     getNextPageParam: (last) => last.cursor,
     queryFn: async ({ pageParam }) => {
       const res = await listProjects({
-        status: PROJECT_STATUS.ACTIVE,
+        status: statusFilter === 'all' ? undefined : statusFilter,
         limit: PAGE_SIZE,
         cursor: pageParam,
       });

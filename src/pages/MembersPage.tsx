@@ -1,6 +1,7 @@
 import { useI18n } from '@/app/I18nProvider';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Minus, Plus, Search, X } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { DirectoryTabs } from '@/components/layout/DirectoryTabs';
@@ -27,9 +28,18 @@ type TransitionDocument = Document & {
 export function MembersPage() {
   const { t, language } = useI18n();
   const { user } = useAuth();
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get('q') ?? '';
+  const [query, setQuery] = useState(urlQuery);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([ALL_MEMBERS_CATEGORY_ID]);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
+
+  useEffect(() => {
+    if (!urlQuery) return;
+    setQuery(urlQuery);
+    setSelectedCategoryIds([ALL_MEMBERS_CATEGORY_ID]);
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams, urlQuery]);
   const { data: members = [], isLoading, error } = useMembersDirectory();
   const {
     favoriteSet,

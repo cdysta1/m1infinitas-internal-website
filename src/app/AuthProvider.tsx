@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Models } from 'appwrite';
+import { useQueryClient } from '@tanstack/react-query';
 import { getCurrentUser, login as loginService, logout as logoutService, register as registerService, type RegisterInput } from '@/services/auth';
 import { getProfile } from '@/services/profiles';
 import { env } from '@/lib/env';
@@ -29,22 +30,19 @@ interface AuthContextValue extends AuthState {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<AuthState['status']>('loading');
 
   // Resolve the profile for a given user (used on bootstrap + login/register).
-  const loadProfile = useCallback(async (u: Models.User<Models.Preferences> | null) => {
-    if (!u) {
-      setProfile(null);
-      return;
-    }
+  const fetchProfileSafe = useCallback(async (u: Models.User<Models.Preferences> | null): Promise<Profile | null> => {
+    if (!u) return null;
     try {
-      const p = await getProfile(u.$id);
-      setProfile(p);
+      return await getProfile(u.$id);
     } catch (err) {
       console.warn('[auth] failed to load profile', err);
-      setProfile(null);
+      return null;
     }
   }, []);
 
@@ -55,9 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const u = await getCurrentUser();
         if (cancelled) return;
+        const p = u ? await fetchProfileSafe(u) : null;
+        if (cancelled) return;
         setUser(u);
+        setProfile(p);
         setStatus(u ? 'authenticated' : 'unauthenticated');
-        if (u) await loadProfile(u);
       } catch (err) {
         console.warn('[auth] bootstrap failed', err);
         if (!cancelled) setStatus('unauthenticated');
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [loadProfile]);
+  }, [fetchProfileSafe]);
 
   // Demo preview always has a local identity. Recover automatically if a hot
   // reload or an earlier logout left the provider unauthenticated.
@@ -76,46 +76,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const u = await getCurrentUser();
       if (cancelled || !u) return;
+      const p = await fetchProfileSafe(u);
+      if (cancelled) return;
       setUser(u);
+      setProfile(p);
       setStatus('authenticated');
-      await loadProfile(u);
     })();
     return () => {
       cancelled = true;
     };
-  }, [loadProfile, status]);
+  }, [fetchProfileSafe, status]);
 
   const login = useCallback(
     async (email: string, password: string) => {
       const u = await loginService(email, password);
+      const p = await fetchProfileSafe(u);
       setUser(u);
+      setProfile(p);
       setStatus('authenticated');
-      await loadProfile(u);
     },
-    [loadProfile],
+    [fetchProfileSafe],
   );
 
   const register = useCallback(
     async (input: RegisterInput) => {
       const u = await registerService(input);
+      const p = await fetchProfileSafe(u);
       setUser(u);
+      setProfile(p);
       setStatus('authenticated');
-      await loadProfile(u);
     },
-    [loadProfile],
+    [fetchProfileSafe],
   );
 
   const logout = useCallback(async () => {
     if (env.demoMode) return;
     await logoutService();
+    queryClient.clear();
     setUser(null);
     setProfile(null);
     setStatus('unauthenticated');
-  }, []);
+  }, [queryClient]);
 
   const refreshProfile = useCallback(async () => {
-    await loadProfile(user);
-  }, [loadProfile, user]);
+    const p = await fetchProfileSafe(user);
+    setProfile(p);
+  }, [fetchProfileSafe, user]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, profile, status, login, register, logout, refreshProfile }),

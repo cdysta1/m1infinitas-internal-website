@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
+import { membersDirectoryKey } from '@/hooks/useMembersDirectory';
 import { ownedProjectsKey } from '@/hooks/useOwnedProjects';
 import { projectDetailKey } from '@/hooks/useProjectDetail';
 import { projectsFeedKey } from '@/hooks/useProjectsFeed';
@@ -33,6 +34,7 @@ import {
   collectProjectMediaAssets,
   type ProjectMediaKind,
 } from '@/lib/projectMedia';
+import { cn } from '@/lib/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { deleteProject, updateProject } from '@/services/projects';
 import { deleteMedia, uploadMany } from '@/services/storage';
@@ -92,11 +94,17 @@ export function EditProjectDrawer({
   const [existingMedia, setExistingMedia] = useState<EditableMediaAsset[]>([]);
   const [initialMedia, setInitialMedia] = useState<EditableMediaAsset[]>([]);
   const [newImages, setNewImages] = useState<PickedImage[]>([]);
+  const newImagesRef = useRef<PickedImage[]>([]);
+  newImagesRef.current = newImages;
   const [status, setStatus] = useState(project.status);
   const [disclose, setDisclose] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => () => {
+    newImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+  }, []);
 
   const mediaQuery = useQuery({
     queryKey: projectEditorMediaKey(project.$id),
@@ -112,7 +120,9 @@ export function EditProjectDrawer({
         mediaQuery.data.updates.map((update) => ({
           content: update.content,
           fileIds: update.file_ids,
+          authorId: update.author_id,
         })),
+        project.owner_id,
       ).map((asset) => ({ id: asset.source, kind: asset.kind })),
     );
   }, [mediaQuery.data, project]);
@@ -146,8 +156,8 @@ export function EditProjectDrawer({
     existingMedia.some((asset) => asset.kind === 'image') ||
     newImages.some((image) => image.file.type.startsWith('image/'));
   const dirty =
-    disclose || status !== project.status || title !== project.title ||
-    summary !== project.summary ||
+    disclose || status !== project.status || title.trim() !== project.title ||
+    summary.trim() !== project.summary ||
     newImages.length > 0 ||
     !sameMediaList(existingMedia, initialMedia);
   const canSave =
@@ -168,8 +178,12 @@ export function EditProjectDrawer({
     try {
       await deleteProject(project.$id);
       setOpen(false);
+      queryClient.removeQueries({ queryKey: projectDetailKey(project.$id) });
       if (location.pathname === '/projects/' + project.$id) navigate('/', { replace: true });
-      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['projects'] }),
+        queryClient.invalidateQueries({ queryKey: membersDirectoryKey }),
+      ]);
       toast.success(t('项目已删除'));
     } catch (error) {
       toast.error(errorText(error, '删除项目失败'));
@@ -238,6 +252,7 @@ export function EditProjectDrawer({
         queryClient.invalidateQueries({ queryKey: timelineKey(project.$id) }),
         queryClient.invalidateQueries({ queryKey: ['projects', 'favorites'] }),
         queryClient.invalidateQueries({ queryKey: projectEditorMediaKey(project.$id) }),
+        queryClient.invalidateQueries({ queryKey: membersDirectoryKey }),
       ]);
 
       toast.success(t('项目已更新'));
@@ -301,7 +316,7 @@ export function EditProjectDrawer({
               {existingMedia.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {existingMedia.map((asset, index) => (
-                    <div key={asset.id} className="group relative aspect-square overflow-hidden rounded-sm bg-muted">
+                    <div key={asset.id} className="group relative aspect-square overflow-hidden rounded-xl bg-muted ring-1 ring-inset ring-black/[0.04]">
                       {asset.kind === 'video' ? (
                         <video
                           src={buildPreviewUrl(asset.id, 'thumb')}
@@ -357,22 +372,63 @@ export function EditProjectDrawer({
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label id="edit-project-status-label">{t('项目状态')}</Label>
+                <div
+                  role="radiogroup"
+                  aria-labelledby="edit-project-status-label"
+                  className="grid grid-cols-2 gap-1.5 rounded-full bg-muted/60 p-1"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={status === 'active'}
+                    disabled={saving}
+                    onClick={() => setStatus('active')}
+                    className={cn(
+                      'flex h-9 items-center justify-center gap-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      status === 'active'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+                    {t('进行中')}
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={status === 'done'}
+                    disabled={saving}
+                    onClick={() => setStatus('done')}
+                    className={cn(
+                      'flex h-9 items-center justify-center gap-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      status === 'done'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden />
+                    {t('已完成')}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {status === 'active'
+                    ? t('展示在画廊并接收成员投递')
+                    : t('归档至已完成列表并停止接收投递')}
+                </p>
+              </div>
+
+              {project.is_anonymous && (
+                <label className="flex items-center gap-2 py-1 text-sm">
+                  <input type="checkbox" checked={disclose} disabled={saving}
+                    onChange={event => setDisclose(event.target.checked)} />
+                  {t('改为署名（保存后无法再匿名）')}
+                </label>
+              )}
+
               <div className="space-y-1.5">
-                <Label htmlFor="edit-project-status">{t('项目状态')}</Label>
-                <select id="edit-project-status" value={status} disabled={saving}
-                  className="block w-full rounded-md border bg-background p-2 text-sm"
-                  onChange={event => setStatus(event.target.value === 'done' ? 'done' : 'active')}>
-                  <option value="active">{t('进行中')}</option>
-                  <option value="done">{t('已完成')}</option>
-                </select>
-                {project.is_anonymous && (
-                  <label className="flex items-center gap-2 py-2 text-sm">
-                    <input type="checkbox" checked={disclose} disabled={saving}
-                      onChange={event => setDisclose(event.target.checked)} />
-                    {t('改为署名（保存后无法再匿名）')}
-                  </label>
-                )}
                 <Label htmlFor="edit-project-title">{t('项目名称')}</Label>
                 <Input
                   id="edit-project-title"
@@ -404,7 +460,7 @@ export function EditProjectDrawer({
         )}
 
         <DrawerFooter>
-          <Button size="lg" className="w-full" onClick={() => void save()} disabled={!canSave}>
+          <Button size="lg" className="w-full rounded-full" onClick={() => void save()} disabled={!canSave}>
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />{t('保存中…')}</>
