@@ -186,7 +186,7 @@ export function FavoriteCountButton({
         'relative isolate inline-flex shrink-0 items-center justify-center tabular-nums transition-[color,border-color,background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:cursor-wait motion-reduce:transition-none motion-reduce:active:scale-100',
         minimal
           ? cn(
-              'h-6 gap-1.5 text-xs',
+              '-mx-2 -my-1.5 min-h-9 gap-1.5 rounded-lg px-2 text-xs sm:-mx-1.5 sm:-my-0.5 sm:min-h-7 sm:px-1.5',
               favorite ? 'text-rose-600' : 'text-muted-foreground hover:text-foreground',
             )
           : cn(
@@ -346,7 +346,7 @@ export function ApplyButton({
             setOpen(true);
           }}
           className={cn(
-            'inline-flex h-6 items-center gap-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            '-mx-2 -my-1.5 inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:-mx-1.5 sm:-my-0.5 sm:min-h-7 sm:px-1.5',
             alreadySent
               ? 'cursor-default text-muted-foreground/70'
               : 'font-medium text-foreground/75 hover:text-foreground hover:underline underline-offset-4',
@@ -557,11 +557,11 @@ export function SubmissionInbox({
 
   return (
     <section className={compactHeader ? 'space-y-4' : 'mt-10 border-t pt-6 space-y-4'}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div
           role="tablist"
           aria-label={t('投递收件箱')}
-          className="flex items-center gap-5 text-xs"
+          className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center"
         >
           <button
             type="button"
@@ -569,14 +569,16 @@ export function SubmissionInbox({
             aria-selected={box === 'received'}
             onClick={() => setBox('received')}
             className={cn(
-              'py-1 transition-colors',
+              'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full px-4 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-9',
               box === 'received'
-                ? 'font-medium text-foreground underline decoration-foreground/70 decoration-1 underline-offset-[6px]'
-                : 'text-muted-foreground hover:text-foreground',
+                ? 'bg-foreground font-medium text-background'
+                : 'bg-muted/45 text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
-            {t('收到的投递')}
-            {receivedItems.length > 0 && ` · ${receivedItems.length}`}
+            <span>{t('收到的投递')}</span>
+            {receivedItems.length > 0 && (
+              <span className="font-mono text-[11px] opacity-75 tabular-nums">{receivedItems.length}</span>
+            )}
           </button>
           <button
             type="button"
@@ -584,25 +586,29 @@ export function SubmissionInbox({
             aria-selected={box === 'sent'}
             onClick={() => setBox('sent')}
             className={cn(
-              'py-1 transition-colors',
+              'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full px-4 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-9',
               box === 'sent'
-                ? 'font-medium text-foreground underline decoration-foreground/70 decoration-1 underline-offset-[6px]'
-                : 'text-muted-foreground hover:text-foreground',
+                ? 'bg-foreground font-medium text-background'
+                : 'bg-muted/45 text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
-            {t('我发出的投递')}
-            {sentItems.length > 0 && ` · ${sentItems.length}`}
+            <span>{t('我发出的投递')}</span>
+            {sentItems.length > 0 && (
+              <span className="font-mono text-[11px] opacity-75 tabular-nums">{sentItems.length}</span>
+            )}
           </button>
         </div>
 
         {box === 'received' && (projectFilters.length > 1 || activeFilter) && (
-          <div className="no-scrollbar flex items-center gap-3 overflow-x-auto text-xs">
+          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto text-xs">
             <button
               type="button"
               onClick={() => setFilter(null)}
               className={cn(
-                'shrink-0 transition-colors',
-                !activeFilter ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
+                'inline-flex min-h-8 shrink-0 items-center rounded-full px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                !activeFilter
+                  ? 'bg-muted font-medium text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
               )}
             >
               {t('全部')}
@@ -613,11 +619,13 @@ export function SubmissionInbox({
                 type="button"
                 onClick={() => setFilter(activeFilter === proj.id ? null : proj.id)}
                 className={cn(
-                  'max-w-[12rem] shrink-0 truncate transition-colors',
-                  activeFilter === proj.id ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
+                  'inline-flex min-h-8 max-w-[12rem] shrink-0 items-center truncate rounded-full px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                  activeFilter === proj.id
+                    ? 'bg-muted font-medium text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
                 )}
               >
-                {proj.title} ({proj.count})
+                <span className="truncate">{proj.title} ({proj.count})</span>
               </button>
             ))}
           </div>

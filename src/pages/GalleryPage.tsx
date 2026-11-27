@@ -218,7 +218,7 @@ export function GalleryPage() {
                 aria-pressed={statusFilter === option.id}
                 onClick={() => setStatusFilter(option.id)}
                 className={cn(
-                  'py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  '-mx-2 inline-flex min-h-9 items-center rounded-lg px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   statusFilter === option.id
                     ? 'font-medium text-foreground underline decoration-foreground/70 decoration-1 underline-offset-[6px]'
                     : 'text-muted-foreground hover:text-foreground',
@@ -235,7 +235,7 @@ export function GalleryPage() {
               aria-pressed={sortBy === 'latest'}
               onClick={() => setSortBy('latest')}
               className={cn(
-                'py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                '-mx-1.5 inline-flex min-h-9 items-center rounded-lg px-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 sortBy === 'latest' ? 'font-medium text-foreground' : 'hover:text-foreground',
               )}
             >
@@ -247,7 +247,7 @@ export function GalleryPage() {
               aria-pressed={sortBy === 'hot'}
               onClick={() => setSortBy('hot')}
               className={cn(
-                'py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                '-mx-1.5 inline-flex min-h-9 items-center rounded-lg px-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 sortBy === 'hot' ? 'font-medium text-foreground' : 'hover:text-foreground',
               )}
             >

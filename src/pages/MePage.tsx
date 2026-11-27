@@ -316,11 +316,11 @@ export function MePage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/50 pt-4 text-xs sm:shrink-0 sm:border-t-0 sm:pt-0">
+          <div className="hidden flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:flex sm:shrink-0">
             <button
               type="button"
               onClick={() => selectTab('inbox')}
-              className="group inline-flex items-baseline gap-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group inline-flex min-h-9 items-baseline gap-1.5 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-background/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="font-mono text-base font-semibold tabular-nums text-foreground">
                 {receivedCount}
@@ -336,7 +336,7 @@ export function MePage() {
             <button
               type="button"
               onClick={() => selectTab('projects')}
-              className="group inline-flex items-baseline gap-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group inline-flex min-h-9 items-baseline gap-1.5 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-background/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="font-mono text-base font-semibold tabular-nums text-foreground">
                 {ownedProjects.length}
@@ -349,7 +349,7 @@ export function MePage() {
             <button
               type="button"
               onClick={() => selectTab('favorites')}
-              className="group inline-flex items-baseline gap-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group inline-flex min-h-9 items-baseline gap-1.5 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-background/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="font-mono text-base font-semibold tabular-nums text-foreground">
                 {totalFavoritesCount}
@@ -361,11 +361,11 @@ export function MePage() {
           </div>
         </header>
 
-        {/* Underline Tab Bar (matches DirectoryTabs) */}
+        {/* Soft Borderless Segmented Tab Bar (large touch targets on mobile, no clipped focus ring) */}
         <nav
           data-onboarding="me-tabs"
           aria-label={t('个人看板分区')}
-          className="no-scrollbar mt-5 flex items-end gap-7 overflow-x-auto border-b"
+          className="mt-5 grid grid-cols-4 gap-1 rounded-2xl bg-muted/50 p-1.5"
         >
           {tabs.map((tab) => {
             const selected = activeTab === tab.id;
@@ -376,20 +376,26 @@ export function MePage() {
                 aria-current={selected ? 'page' : undefined}
                 onClick={() => selectTab(tab.id)}
                 className={cn(
-                  'relative flex h-11 shrink-0 items-center gap-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'relative flex min-h-11 items-center justify-center gap-1 rounded-xl px-1.5 transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-sm',
+                  language === 'en' ? 'text-xs' : 'text-[13px]',
                   selected
-                    ? 'font-medium text-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-foreground'
+                    ? 'bg-background font-medium text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                <span>{t(tab.label)}</span>
+                <span className="truncate">{t(tab.label)}</span>
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className="font-mono text-[11px] text-muted-foreground">
+                  <span
+                    className={cn(
+                      'shrink-0 font-mono text-[10px] tabular-nums sm:text-[11px]',
+                      selected ? 'text-foreground/70' : 'text-muted-foreground/80',
+                    )}
+                  >
                     {tab.count}
                   </span>
                 )}
                 {tab.dot && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" aria-hidden />
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" aria-hidden />
                 )}
               </button>
             );
@@ -410,9 +416,9 @@ export function MePage() {
         {/* Tab 2: My Projects */}
         {activeTab === 'projects' && (
           <section className="mt-6 space-y-4" aria-labelledby="published-projects-heading">
-            <div className="flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center justify-between gap-4">
               <h2 id="published-projects-heading" className="sr-only">{t('已发布项目')}</h2>
-              <div className="flex items-center gap-5">
+              <div className="flex flex-wrap items-center gap-2">
                 {([
                   { id: 'all', label: '全部', count: ownedProjects.length },
                   { id: 'active', label: '进行中', count: activeOwnedCount },
@@ -424,13 +430,14 @@ export function MePage() {
                     aria-pressed={ownedFilter === option.id}
                     onClick={() => setOwnedFilter(option.id)}
                     className={cn(
-                      'py-1 transition-colors',
+                      'inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       ownedFilter === option.id
-                        ? 'font-medium text-foreground underline decoration-foreground/70 decoration-1 underline-offset-[6px]'
-                        : 'text-muted-foreground hover:text-foreground',
+                        ? 'bg-foreground font-medium text-background'
+                        : 'bg-muted/45 text-muted-foreground hover:bg-muted hover:text-foreground',
                     )}
                   >
-                    {t(option.label)} · {option.count}
+                    <span>{t(option.label)}</span>
+                    <span className="font-mono text-[11px] opacity-75 tabular-nums">{option.count}</span>
                   </button>
                 ))}
               </div>

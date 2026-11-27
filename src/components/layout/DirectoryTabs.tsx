@@ -20,9 +20,9 @@ export function DirectoryTabs() {
               end={tab.end}
               className={({ isActive }) =>
                 cn(
-                  'relative flex h-12 items-center text-sm transition-colors',
+                  'relative -mx-2 flex h-12 items-center px-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                   isActive
-                    ? 'font-medium text-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-foreground'
+                    ? 'font-medium text-foreground after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:bg-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )
               }
