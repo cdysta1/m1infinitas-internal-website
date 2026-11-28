@@ -186,7 +186,7 @@ export function ProjectDetailPage() {
           <div
             className={cn(
               'grid items-start gap-3 md:gap-4',
-              media.length <= 2 ? 'grid-cols-1' : 'grid-cols-2',
+              media.length <= 2 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2',
             )}
           >
             {media.map((item, index) => (
@@ -194,14 +194,14 @@ export function ProjectDetailPage() {
                 key={item.key}
                 className={cn(
                   'group relative min-w-0 self-start overflow-hidden rounded-xl bg-muted ring-1 ring-inset ring-black/[0.04]',
-                  media.length > 2 && (index === 0 || item.kind === 'video') && 'col-span-2',
+                  media.length > 2 && (index === 0 || item.kind === 'video') && 'sm:col-span-2',
                 )}
               >
                 {item.kind === 'video' ? (
                   <video
                     src={item.src}
                     aria-label={t('{name}，项目视频 {index}', { name: project.title, index: index + 1 })}
-                    className="max-h-[82vh] min-h-40 w-full bg-black object-contain"
+                    className="max-h-[75dvh] min-h-40 w-full bg-black object-contain sm:max-h-[82dvh]"
                     controls
                     playsInline
                     preload="metadata"
@@ -216,7 +216,8 @@ export function ProjectDetailPage() {
                     <SmartImage
                       src={item.src}
                       alt={t('{name}，项目图像 {index}', { name: project.title, index: index + 1 })}
-                      wrapperClassName="w-full min-h-40"
+                      wrapperClassName="w-full"
+                      loadingClassName="min-h-40"
                       imgClassName="h-auto w-full object-contain"
                     />
                   </button>
@@ -262,7 +263,7 @@ export function ProjectDetailPage() {
 
             <div className="flex min-w-0 flex-1 flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between gap-2 border-b pb-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b pb-2.5">
                   <div className="flex items-center gap-2.5">
                     <ProjectStatusBadge status={project.status} size="xs" />
                     {canEdit && project.is_anonymous && (

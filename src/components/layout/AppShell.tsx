@@ -32,8 +32,25 @@ const SWIPE_DURATION_MS = 220;
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(
-    target.closest('a, button, input, textarea, select, video, [role="button"], [data-no-swipe-back]'),
+    target.closest(
+      'a, button, input, textarea, select, video, [role="button"], [role="dialog"], [aria-modal="true"], [data-no-swipe-back]',
+    ),
   );
+}
+
+function isInsideHorizontalScroller(target: EventTarget | null, boundary: Element): boolean {
+  let node = target instanceof Element ? target : null;
+  while (node && node !== boundary) {
+    const style = window.getComputedStyle(node);
+    if (
+      (style.overflowX === 'auto' || style.overflowX === 'scroll')
+      && node.scrollWidth > node.clientWidth + 1
+    ) {
+      return true;
+    }
+    node = node.parentElement;
+  }
+  return false;
 }
 
 export function AppShell({
@@ -77,7 +94,9 @@ export function AppShell({
       !onSwipeBack ||
       !event.isPrimary ||
       event.pointerType === 'mouse' ||
-      isInteractiveTarget(event.target)
+      isInteractiveTarget(event.target) ||
+      isInsideHorizontalScroller(event.target, event.currentTarget) ||
+      Boolean(document.querySelector('[role="dialog"][aria-modal="true"]'))
     ) return;
     if (navigationTimerRef.current !== null) return;
 
@@ -91,7 +110,6 @@ export function AppShell({
       tracking: true,
     };
     setSettling(false);
-    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -101,12 +119,17 @@ export function AppShell({
     const deltaX = event.clientX - gesture.startX;
     const deltaY = event.clientY - gesture.startY;
     if (!gesture.decided) {
-      if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
+      if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) return;
       if (deltaX >= 0 || Math.abs(deltaY) > Math.abs(deltaX)) {
         gesture.tracking = false;
         return;
       }
       gesture.decided = true;
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Ignore capture failure on synthetic or already-released pointers.
+      }
     }
 
     const nextOffset = Math.max(-window.innerWidth, Math.min(0, deltaX));
@@ -121,8 +144,13 @@ export function AppShell({
     const gesture = gestureRef.current;
     if (!gesture || gesture.pointerId !== event.pointerId) return;
 
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
     if (!gesture.decided || !gesture.tracking) {
-      resetSwipe();
+      gestureRef.current = null;
+      if (offsetRef.current !== 0) resetSwipe();
       return;
     }
 
@@ -146,14 +174,21 @@ export function AppShell({
   };
 
   const handlePointerCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (gestureRef.current?.pointerId === event.pointerId) resetSwipe();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (gestureRef.current?.pointerId === event.pointerId) {
+      if (offsetRef.current !== 0) resetSwipe();
+      else gestureRef.current = null;
+    }
   };
 
   const swipeProgress = Math.min(1, Math.abs(swipeOffset) / Math.max(1, window.innerWidth));
+  const isSwiping = swipeOffset !== 0 || settling;
 
   return (
     <div className="relative min-h-[100dvh] overflow-x-clip bg-muted/40">
-      {onSwipeBack && (
+      {onSwipeBack && isSwiping && (
         <div
           className="pointer-events-none fixed right-3 top-1/2 z-0 flex -translate-y-1/2 items-center gap-1 text-xs font-medium text-muted-foreground"
           style={{ opacity: Math.max(0, (swipeProgress - 0.08) * 2.4) }}
@@ -164,15 +199,16 @@ export function AppShell({
       <div
         className={cn(
           'relative z-10 min-h-[100dvh] bg-background text-foreground',
-          onSwipeBack && 'touch-pan-y will-change-transform',
+          onSwipeBack && 'touch-pan-y',
+          isSwiping && 'will-change-transform',
         )}
-        style={{
+        style={isSwiping ? {
           transform: `translate3d(${swipeOffset}px, 0, 0)`,
           opacity: 1 - swipeProgress * 0.08,
           transition: settling
             ? `transform ${SWIPE_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${SWIPE_DURATION_MS}ms ease`
             : 'none',
-        }}
+        } : undefined}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}

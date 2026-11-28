@@ -416,7 +416,7 @@ export function OnboardingGuide() {
   const spaceAbove = spotlightTop - offset - 12;
   const placeBelow = spaceBelow >= tooltipHeight || spaceBelow >= spaceAbove;
   const tooltipTop = placeBelow
-    ? Math.min(viewportHeight - tooltipHeight - 12, spotlightBottom + offset)
+    ? Math.max(12, Math.min(viewportHeight - tooltipHeight - 12, spotlightBottom + offset))
     : Math.max(12, spotlightTop - tooltipHeight - offset);
   const arrowLeft = Math.min(
     Math.max(22, targetCenter - tooltipLeft - 6),

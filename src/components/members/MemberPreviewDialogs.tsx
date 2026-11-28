@@ -34,8 +34,8 @@ export function MemberProjectsDialog({
   const { t, language } = useI18n();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl border-0 bg-background p-0 shadow-2xl">
-        <header className="border-b bg-muted/40 px-5 py-4 pr-12">
+      <DialogContent className="flex max-h-[88dvh] max-w-md flex-col overflow-hidden rounded-2xl border-0 bg-background p-0 shadow-2xl">
+        <header className="shrink-0 border-b bg-muted/40 px-5 py-4 pr-12">
           <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             {t('公开署名项目')} · {String(projects.length).padStart(2, '0')}
           </p>
@@ -47,7 +47,7 @@ export function MemberProjectsDialog({
           </DialogDescription>
         </header>
 
-        <div className="max-h-[65vh] space-y-2 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-4">
           {projects.map((project) => {
             const isCurrent = project.$id === currentProjectId;
             return (
@@ -114,8 +114,8 @@ export function MemberProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-2xl border-0 bg-background p-0 shadow-2xl">
-        <header className="flex items-center gap-4 border-b bg-muted/40 px-5 py-5 pr-12">
+      <DialogContent className="flex max-h-[88dvh] max-w-lg flex-col overflow-hidden rounded-2xl border-0 bg-background p-0 shadow-2xl">
+        <header className="flex shrink-0 items-center gap-4 border-b bg-muted/40 px-5 py-5 pr-12">
           <Avatar className="h-14 w-14 shrink-0 rounded-xl">
             <AvatarImage src={avatarUrl} alt={member.profile.name} className="object-cover" />
             <AvatarFallback className="rounded-xl">
@@ -124,7 +124,7 @@ export function MemberProfileDialog({
           </Avatar>
           <div className="min-w-0 flex-1">
             {member.meta.areas[0] && (
-              <span className="inline-block rounded-full bg-foreground px-2.5 py-0.5 text-[10px] font-medium text-background">
+              <span className="inline-block max-w-full truncate rounded-full bg-foreground px-2.5 py-0.5 text-[10px] font-medium text-background">
                 {labelFor(member.meta.areas[0])}
               </span>
             )}
@@ -143,7 +143,7 @@ export function MemberProfileDialog({
           </div>
         </header>
 
-        <div className="max-h-[68vh] space-y-5 overflow-y-auto px-5 py-5">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5">
           {member.meta.description && (
             <p className="whitespace-pre-line break-words text-sm leading-6 text-foreground/85">
               {member.meta.description}
@@ -184,7 +184,7 @@ export function MemberProfileDialog({
                 const inner = (
                   <>
                     <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="min-w-0 flex-1 break-words">
+                    <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                       <span className="text-[11px] text-muted-foreground">{labelFor(contact.label)} · </span>
                       <span className="text-xs text-foreground">{contact.value}</span>
                     </span>
@@ -249,7 +249,7 @@ export function MemberProfileDialog({
           )}
         </div>
 
-        <footer className="flex items-center justify-end border-t bg-muted/25 px-5 py-3">
+        <footer className="flex shrink-0 items-center justify-end border-t bg-muted/25 px-5 py-3">
           <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-full">
             <Link
               to={`/members?q=${encodeURIComponent(member.profile.name)}`}

@@ -118,11 +118,11 @@ export function MemberCard({
       style={transitionStyle}
       className="relative flex h-full flex-col overflow-hidden rounded-sm border bg-card p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)]"
     >
-      <div className="flex items-center justify-between gap-3">
-        <span className="rounded-full bg-foreground px-2.5 py-1 text-[10px] font-medium text-background">
+      <div className="flex items-center justify-between gap-2.5">
+        <span className="min-w-0 truncate rounded-full bg-foreground px-2.5 py-1 text-[10px] font-medium text-background">
           {labelFor(meta.areas[0] ?? 'M1')}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {hasProjects ? (
             <button
               type="button"
@@ -206,7 +206,7 @@ export function MemberCard({
               const content = (
                 <>
                   <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  <span className="min-w-0 break-words">
+                  <span className="min-w-0 [overflow-wrap:anywhere]">
                     <span className="block text-[10px] text-muted-foreground">{labelFor(contact.label)}</span>
                     <span className="block text-xs">{contact.value}</span>
                   </span>

@@ -8,7 +8,7 @@ export function LanguageSwitcher() {
       role="group"
       aria-label={t('切换语言')}
       aria-busy={savingLanguage}
-      className="inline-grid h-8 w-16 shrink-0 grid-cols-2 rounded-full border bg-muted/50 p-0.5"
+      className="inline-grid h-8 w-14 shrink-0 grid-cols-2 rounded-full border bg-muted/50 p-0.5 sm:w-16"
     >
       {([{ id: 'zh', label: '中', name: '简体中文', lang: 'zh-CN' }, { id: 'en', label: 'EN', name: 'English', lang: 'en' }] as const).map((option) => (
         <button

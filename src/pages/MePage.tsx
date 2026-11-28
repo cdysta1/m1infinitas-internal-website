@@ -367,11 +367,21 @@ export function MePage() {
                 <AvatarImage src={avatarUrl} alt={displayName} />
                 <AvatarFallback className="text-lg">{initials}</AvatarFallback>
               </Avatar>
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+              <span className="absolute inset-0 hidden items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
                 {uploadingAvatar ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Camera className="h-4 w-4" />
+                )}
+              </span>
+              <span
+                aria-hidden
+                className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background shadow-sm ring-2 ring-background sm:hidden"
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Camera className="h-3 w-3" />
                 )}
               </span>
             </button>
@@ -387,15 +397,20 @@ export function MePage() {
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-xl font-semibold tracking-tight">{displayName}</h1>
                 {boundCard && (
-                  <span className="rounded-full bg-background/85 px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                  <span className="max-w-full truncate rounded-full bg-background/85 px-2.5 py-0.5 text-[11px] text-muted-foreground">
                     {t('已绑定名片：{name}', { name: boundCard.profile.name })}
                   </span>
                 )}
               </div>
-              <p className="mt-1 truncate text-xs text-muted-foreground">
-                {user.email}
-                {profile?.wechat && ` · ${t('微信号')} ${profile.wechat}`}
-              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                <span className="break-all">{user.email}</span>
+                {profile?.wechat && (
+                  <>
+                    <span aria-hidden className="hidden text-border sm:inline">·</span>
+                    <span className="break-all">{t('微信号')} {profile.wechat}</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -468,8 +483,8 @@ export function MePage() {
                 aria-current={selected ? 'page' : undefined}
                 onClick={() => selectTab(tab.id)}
                 className={cn(
-                  'relative z-10 flex min-h-11 items-center justify-center gap-1 rounded-xl px-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-sm',
-                  language === 'en' ? 'text-xs' : 'text-[13px]',
+                  'relative z-10 flex min-h-11 items-center justify-center gap-1 rounded-xl px-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-sm',
+                  language === 'en' ? 'text-[11px]' : 'text-[13px]',
                   selected
                     ? 'font-medium text-foreground'
                     : 'text-muted-foreground hover:text-foreground',
@@ -616,7 +631,7 @@ export function MePage() {
                           onClick={() => void toggleStatus(project)}
                           disabled={statusPendingId !== null}
                           aria-label={isActive ? `${t('标记为已结束')} ${project.title}` : `${t('恢复为进行中')} ${project.title}`}
-                          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-background/85 px-3 text-xs font-medium text-foreground/80 transition-colors hover:bg-background hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-background/85 px-3.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-background hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-8 sm:px-3"
                         >
                           {statusUpdating ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -636,7 +651,7 @@ export function MePage() {
                               data-onboarding="edit-project"
                               aria-label={t('编辑项目 {name}', { name: project.title })}
                               title={t('编辑项目')}
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/85 text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background/85 text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-8 sm:w-8"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>

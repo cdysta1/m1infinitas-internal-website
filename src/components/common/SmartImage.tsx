@@ -7,6 +7,8 @@ interface SmartImageProps {
   alt: string;
   // Wrapper classes: positioning + sizing (e.g. `aspect-square w-full`).
   wrapperClassName?: string;
+  // Extra wrapper classes applied only while loading (e.g. `min-h-40`).
+  loadingClassName?: string;
   // Applied to the <img> itself (object-fit, hover, etc).
   imgClassName?: string;
 }
@@ -15,7 +17,13 @@ interface SmartImageProps {
 // Media is loaded from a cross-origin Appwrite URL that can fail (permission /
 // cookie issues); without onError the box would sit silently blank, so we surface
 // an explicit "加载失败" state instead.
-export function SmartImage({ src, alt, wrapperClassName, imgClassName }: SmartImageProps) {
+export function SmartImage({
+  src,
+  alt,
+  wrapperClassName,
+  loadingClassName,
+  imgClassName,
+}: SmartImageProps) {
   const { t } = useI18n();
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [loadedSrc, setLoadedSrc] = useState<string>();
@@ -31,7 +39,13 @@ export function SmartImage({ src, alt, wrapperClassName, imgClassName }: SmartIm
   }, [src]);
 
   return (
-    <div className={cn('relative overflow-hidden bg-muted', wrapperClassName)}>
+    <div
+      className={cn(
+        'relative overflow-hidden bg-muted',
+        wrapperClassName,
+        !loaded && !failed && loadingClassName,
+      )}
+    >
       {src && !failed && (
         <img
           ref={imgRef}

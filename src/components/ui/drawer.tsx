@@ -34,7 +34,7 @@ const DrawerContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92vh] w-full max-w-xl flex-col',
+        'fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[90dvh] w-full max-w-xl flex-col',
         'rounded-t-2xl border-t bg-background shadow-xl',
         'data-[state=open]:animate-slide-up',
         // Safe-area padding for iOS home indicator.
@@ -44,7 +44,7 @@ const DrawerContent = React.forwardRef<
       {...props}
     >
       <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-muted" aria-hidden />
-      <div className="flex-1 overflow-y-auto px-4 pb-4 pt-3">{children}</div>
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3">{children}</div>
     </DialogPrimitive.Content>
   </DialogPrimitive.Portal>
 ));

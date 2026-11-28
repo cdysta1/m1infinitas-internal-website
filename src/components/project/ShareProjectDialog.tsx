@@ -411,8 +411,8 @@ export function ShareProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm overflow-y-auto rounded-2xl border-0 bg-background p-0 shadow-2xl">
-        <header className="border-b bg-muted/40 px-5 py-4 pr-12">
+      <DialogContent className="flex max-h-[90dvh] max-w-sm flex-col overflow-hidden rounded-2xl border-0 bg-background p-0 shadow-2xl">
+        <header className="shrink-0 border-b bg-muted/40 px-5 py-4 pr-12">
           <div className="flex items-center gap-2">
             <Share2 className="h-4 w-4 text-muted-foreground" />
             <DialogTitle className="text-base font-semibold">{t('分享项目')}</DialogTitle>
@@ -422,10 +422,10 @@ export function ShareProjectDialog({
           </DialogDescription>
         </header>
 
-        <div className="space-y-3.5 p-4 sm:p-5">
+        <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain p-4 sm:p-5">
           <div className="flex justify-center overflow-hidden rounded-2xl bg-muted/45 p-2.5">
             {rendering || !posterUrl ? (
-              <div className="flex aspect-[900/1260] max-h-[44vh] w-full max-w-[260px] items-center justify-center rounded-xl bg-background text-muted-foreground">
+              <div className="flex aspect-[900/1260] max-h-[40dvh] w-full max-w-[260px] items-center justify-center rounded-xl bg-background text-muted-foreground sm:max-h-[44dvh]">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span className="sr-only">{t('正在生成分享海报')}</span>
               </div>
@@ -433,7 +433,7 @@ export function ShareProjectDialog({
               <img
                 src={posterUrl}
                 alt={t('{name} 分享海报', { name: project.title })}
-                className="mx-auto block max-h-[44vh] w-auto max-w-full rounded-xl object-contain shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+                className="mx-auto block max-h-[40dvh] w-auto max-w-full rounded-xl object-contain shadow-[0_8px_24px_rgba(0,0,0,0.08)] sm:max-h-[44dvh]"
               />
             )}
           </div>

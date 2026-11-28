@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useI18n } from '@/app/I18nProvider';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -7,11 +8,11 @@ const tabs = [
   { label: '成员', to: '/members', end: false },
 ] as const;
 
-export function DirectoryTabs() {
+export function DirectoryTabs({ action }: { action?: ReactNode } = {}) {
   const { t } = useI18n();
   return (
     <nav aria-label={t('内容浏览')} className="border-b">
-      <div className="mx-auto flex h-12 max-w-6xl items-center px-4">
+      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-3 px-4">
         <div className="flex h-full items-end gap-7">
           {tabs.map((tab) => (
             <NavLink
@@ -27,10 +28,11 @@ export function DirectoryTabs() {
                 )
               }
             >
-          {t(tab.label)}
+              {t(tab.label)}
             </NavLink>
           ))}
         </div>
+        {action}
       </div>
     </nav>
   );

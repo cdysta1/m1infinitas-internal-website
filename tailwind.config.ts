@@ -72,11 +72,16 @@ const config: Config = {
           from: { transform: 'scale(0.96)', opacity: '0' },
           to: { transform: 'scale(1)', opacity: '1' },
         },
+        'dialog-in': {
+          from: { transform: 'translate(-50%, -50%) scale(0.96)', opacity: '0' },
+          to: { transform: 'translate(-50%, -50%) scale(1)', opacity: '1' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 200ms ease-out',
         'slide-up': 'slide-up 260ms cubic-bezier(0.32, 0.72, 0, 1)',
         'scale-in': 'scale-in 160ms ease-out',
+        'dialog-in': 'dialog-in 180ms cubic-bezier(0.22, 1, 0.36, 1)',
       },
     },
   },

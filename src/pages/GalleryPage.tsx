@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Loader2, Plus } from 'lucide-react';
 import { useI18n } from '@/app/I18nProvider';
 import { AppShell } from '@/components/layout/AppShell';
@@ -141,26 +140,24 @@ export function GalleryPage() {
       : t('还没有进行中的项目');
 
   return (
-    <AppShell
-      showCreate={false}
-      footer={createPortal(
-        <button
-          type="button"
-          data-onboarding="create-project"
-          onClick={() => setCreateOpen(true)}
-          aria-label={t('发布项目')}
-          title={t('发布项目')}
-          aria-haspopup="dialog"
-          aria-expanded={createOpen}
-          className="create-project-fab fixed bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] right-4 flex h-12 w-12 items-center justify-center rounded-full border-2 border-background bg-foreground text-background shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:hidden"
-          style={{ zIndex: 40 }}
-        >
-          <Plus strokeWidth={2.2} className="h-5 w-5" />
-        </button>,
-        document.body,
-      )}
-    >
-      <DirectoryTabs />
+    <AppShell showCreate={false}>
+      <DirectoryTabs
+        action={(
+          <button
+            type="button"
+            data-onboarding="create-project"
+            onClick={() => setCreateOpen(true)}
+            aria-label={t('发布项目')}
+            title={t('发布项目')}
+            aria-haspopup="dialog"
+            aria-expanded={createOpen}
+            className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-foreground px-3 text-xs font-medium text-background transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:hidden"
+          >
+            <Plus strokeWidth={2.2} className="h-3.5 w-3.5 shrink-0" />
+            <span>{t('发布项目')}</span>
+          </button>
+        )}
+      />
       <div className="page-enter relative mx-auto max-w-6xl px-4 py-4 sm:py-6">
         {/* Desktop sticky morphing publish CTA: top capsule at y=0, smoothly shrinks into a circle while scrolling */}
         <div className="pointer-events-none sticky top-[4.5rem] z-20 hidden h-0 justify-end sm:flex">
@@ -265,7 +262,7 @@ export function GalleryPage() {
         ) : displayedProjects.length === 0 ? (
           <EmptyState
             title={emptyTitle}
-            description={statusFilter === 'done' ? t('已标记结束的项目会归档显示在这里。') : t('点击右下角 + 号，发布第一个项目')}
+            description={statusFilter === 'done' ? t('已标记结束的项目会归档显示在这里。') : t('点击「发布项目」，发布第一个项目')}
             action={statusFilter === 'done' ? (
               <Button size="sm" variant="outline" onClick={() => setStatusFilter('active')}>
                 {t('查看进行中的项目')}

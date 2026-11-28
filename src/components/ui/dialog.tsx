@@ -39,10 +39,10 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2',
+        'fixed left-1/2 top-1/2 z-50 w-[calc(100vw-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 sm:w-[calc(100vw-2rem)]',
         'rounded-2xl border bg-background p-5 shadow-lg',
-        'data-[state=open]:animate-scale-in',
-        'max-h-[85vh] overflow-y-auto',
+        'data-[state=open]:animate-dialog-in',
+        'max-h-[88dvh] overflow-y-auto overscroll-contain',
         className,
       )}
       {...props}
@@ -51,8 +51,8 @@ const DialogContent = React.forwardRef<
       {!hideClose && (
         <DialogPrimitive.Close
           className={cn(
-            'absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground',
-            'opacity-70 transition-opacity hover:opacity-100 focus:outline-none',
+            'absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground',
+            'opacity-75 transition-opacity hover:bg-muted/70 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           )}
           aria-label={t('关闭')}
         >

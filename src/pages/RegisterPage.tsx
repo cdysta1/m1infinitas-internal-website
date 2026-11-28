@@ -66,8 +66,8 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col justify-center bg-background px-6 py-12">
-      <div className="absolute right-4 top-4"><LanguageSwitcher /></div>
+    <div className="relative flex min-h-[100dvh] flex-col justify-center bg-background px-6 py-12">
+      <div className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))]"><LanguageSwitcher /></div>
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -121,7 +121,7 @@ export function RegisterPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="name">{t('昵称')}</Label>
               <Input

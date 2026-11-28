@@ -30,14 +30,14 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
   );
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-baseline gap-2">
-          <span className="text-[15px] font-semibold tracking-tight">M1 Infinitas</span>
+    <header className="sticky top-0 z-30 w-full border-b bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3.5 sm:px-4">
+        <Link to="/" className="flex shrink-0 items-baseline gap-2">
+          <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight">M1 Infinitas</span>
           <span className="hidden text-xs text-muted-foreground sm:inline">{t('内部协作')}</span>
         </Link>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           <LanguageSwitcher />
           {showCreate && onCreateClick && (
             <Button
@@ -45,7 +45,7 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
               size="icon"
               onClick={onCreateClick}
               aria-label={t('创建项目')}
-              className="text-foreground"
+              className="h-9 w-9 text-foreground sm:h-10 sm:w-10"
             >
               <Plus className="h-5 w-5" />
             </Button>
@@ -56,7 +56,7 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
             onClick={() => window.dispatchEvent(new Event(ONBOARDING_OPEN_EVENT))}
             aria-label={t('查看功能引导')}
             title={t('功能引导')}
-            className="text-muted-foreground"
+            className="h-9 w-9 text-muted-foreground sm:h-8 sm:w-8"
           >
             <CircleHelp className="h-4 w-4" />
           </Button>
@@ -66,7 +66,7 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
             aria-label={unreadCount > 0 ? t('收件箱（{count} 条未读）', { count: unreadCount }) : t('收件箱')}
             title={unreadCount > 0 ? t('收件箱（{count} 条未读）', { count: unreadCount }) : t('收件箱')}
             className={cn(
-              'relative inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'relative inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-8 sm:w-8',
               onInbox
                 ? 'bg-muted text-foreground'
                 : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
@@ -74,12 +74,12 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
           >
             <Inbox className="h-4 w-4" />
             {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold leading-none text-white tabular-nums">
+              <span className="absolute right-0 top-0 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold leading-none text-white tabular-nums sm:-right-0.5 sm:-top-0.5">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </Link>
-          <Link to="/me" aria-label={t('我的')} className="ml-1 flex items-center gap-2">
+          <Link to="/me" aria-label={t('我的')} className="ml-0.5 flex items-center gap-2 sm:ml-1">
             <Avatar className="h-8 w-8">
               <AvatarImage src={avatarUrl} alt={displayName} />
               <AvatarFallback>{initials}</AvatarFallback>
@@ -94,7 +94,7 @@ export function Header({ onCreateClick, showCreate = true }: HeaderProps) {
               navigate('/login', { replace: true });
             }}
             aria-label={t('退出登录')}
-            className="text-muted-foreground"
+            className="h-9 w-9 text-muted-foreground sm:h-10 sm:w-10"
           >
             <LogOut className="h-4 w-4" />
           </Button>

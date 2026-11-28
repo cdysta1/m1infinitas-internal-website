@@ -46,8 +46,8 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col justify-center bg-background px-6 py-12">
-      <div className="absolute right-4 top-4"><LanguageSwitcher /></div>
+    <div className="relative flex min-h-[100dvh] flex-col justify-center bg-background px-6 py-12">
+      <div className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))]"><LanguageSwitcher /></div>
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">

@@ -134,7 +134,7 @@ export function MembersPage() {
                   setSelectedCategoryIds(removeMemberCategory(selectedCategoryIds, selectedCategoryIds[selectedCategoryIds.length - 1]));
                 }}
                 placeholder={selectedCategoryIds.some((id) => id !== ALL_MEMBERS_CATEGORY_ID) ? t('继续搜索') : t('搜索姓名、方向或专长')}
-                className="h-8 min-w-[8rem] flex-1 appearance-none border-0 bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground/70 [&::-webkit-search-cancel-button]:hidden sm:text-sm"
+                className="h-8 min-w-[5.5rem] flex-1 appearance-none border-0 bg-transparent px-1 text-base outline-none placeholder:text-muted-foreground/70 [&::-webkit-search-cancel-button]:hidden sm:min-w-[8rem] sm:text-sm"
               />
             </div>
             {query && (

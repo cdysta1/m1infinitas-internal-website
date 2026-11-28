@@ -158,8 +158,12 @@ export function MemberCategoryFilter({ members, selectedIds, onChange, showSelec
 
   return (
     <div ref={filterRef} data-member-category-filter>
-      <div className="relative">
-        <div className="no-scrollbar flex gap-2 overflow-x-auto py-4 pr-8 lg:pr-0" role="group" aria-label={t("按学科筛选")}>
+      <div className="relative -mx-4 lg:mx-0">
+        <div
+          className="no-scrollbar flex touch-pan-x gap-2 overflow-x-auto px-4 py-4 pr-12 lg:px-0 lg:pr-0"
+          role="group"
+          aria-label={t("按学科筛选")}
+        >
           <button
             type="button"
             aria-pressed={selectedIds.includes(ALL_MEMBERS_CATEGORY_ID)}

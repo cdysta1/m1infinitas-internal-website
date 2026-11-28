@@ -279,9 +279,9 @@ function ConfirmSubmission({ project, close }: { project: Project; close: () => 
     onError: () => toast.error(t('投递失败，请重试')),
   });
   return <Dialog open onOpenChange={open => { if (!open && !send.isPending) close(); }}>
-    <DialogContent className="max-w-[29rem] overflow-y-auto rounded-2xl border-0 p-0 shadow-2xl"
+    <DialogContent className="flex max-h-[88dvh] max-w-[29rem] flex-col overflow-hidden rounded-2xl border-0 p-0 shadow-2xl"
       onOpenAutoFocus={event => { event.preventDefault(); headingRef.current?.focus(); }}>
-      <header className="flex items-center gap-4 border-b bg-muted/50 px-5 py-5 pr-12 sm:px-6 sm:pr-12">
+      <header className="flex shrink-0 items-center gap-4 border-b bg-muted/50 px-5 py-5 pr-12 sm:px-6 sm:pr-12">
         <SmartImage src={project.cover_file_id ? buildPreviewUrl(project.cover_file_id, 'thumb') : undefined} alt=""
           wrapperClassName="h-16 w-14 shrink-0 rounded-lg" imgClassName="object-cover" />
         <div className="min-w-0">
@@ -290,7 +290,7 @@ function ConfirmSubmission({ project, close }: { project: Project; close: () => 
             className="break-words text-xl font-semibold leading-tight tracking-tight outline-none">{project.title}</DialogTitle>
         </div>
       </header>
-      <div className="space-y-5 px-5 py-5 sm:px-6">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
         <div>
           <DialogDescription className="mb-2 text-xs font-medium">{t('负责人将收到以下资料')}</DialogDescription>
           {ready ? <div className="rounded-xl bg-muted/60 p-4">
@@ -322,7 +322,7 @@ function ConfirmSubmission({ project, close }: { project: Project; close: () => 
             onChange={e => setNote(e.target.value)} />
         </div>
       </div>
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-4 sm:px-6">
+      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t px-5 py-4 sm:px-6">
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><LockKeyhole className="h-3.5 w-3.5" />{t('投递后无法撤回')}</p>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={close} disabled={send.isPending}>{t('取消')}</Button>
