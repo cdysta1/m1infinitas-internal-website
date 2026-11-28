@@ -110,7 +110,7 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
             hint={t('至少 1 张图片作为封面；图片与视频合计最多 9 个')}
           />
 
-          <div className="space-y-1.5">
+          <div className="space-y-2.5">
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -127,11 +127,11 @@ export function CreateProjectDrawer({ open, onOpenChange }: CreateProjectDrawerP
               rows={5}
               disabled={createProject.isPending}
               aria-describedby="project-summary-count"
-              className="min-h-[120px]"
+              className="min-h-[136px]"
             />
             <div
               id="project-summary-count"
-              className="text-right font-mono text-[10px] text-muted-foreground"
+              className="text-right font-mono text-[11px] tabular-nums text-muted-foreground/80"
             >
               {summary.length}/{MAX_PROJECT_SUMMARY_LENGTH}
             </div>

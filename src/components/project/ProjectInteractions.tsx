@@ -316,9 +316,9 @@ function ConfirmSubmission({ project, close }: { project: Project; close: () => 
             <label htmlFor="submission-message" className="text-sm font-medium">{t('留言（选填）')}</label>
             <span className="text-xs tabular-nums text-muted-foreground">{note.length}/500</span>
           </div>
-          <Textarea id="submission-message" rows={2} value={note} maxLength={500} disabled={send.isPending}
+          <Textarea id="submission-message" rows={3} value={note} maxLength={500} disabled={send.isPending}
             placeholder={t('说说你想怎样参与这个项目…')}
-            className="min-h-[68px] rounded-lg text-sm leading-relaxed focus-visible:ring-1"
+            className="min-h-[88px]"
             onChange={e => setNote(e.target.value)} />
         </div>
       </div>

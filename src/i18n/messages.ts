@@ -134,6 +134,7 @@ export const EN_MESSAGES: Record<string, string> = {
   '点击复制张思维邮箱': 'Tap to copy Zhang Siwei’s email',
   '已复制张思维邮箱': 'Zhang Siwei’s email copied',
   '我的简介': 'My bio',
+  '介绍一下你的创作方向、背景或想合作的内容…': 'Share your practice, background, or what you would like to collaborate on...',
   '我的标签': 'My tags',
   '选择已有标签': 'Choose existing tags',
   '搜索已有标签': 'Search existing tags',

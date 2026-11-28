@@ -839,7 +839,7 @@ export function MePage() {
                   </section>
 
                   <section className="rounded-2xl bg-muted/40 p-5 sm:p-6">
-                    <div className="[&>form]:mt-0 [&>form]:border-t-0 [&>form]:pt-0 [&_input]:bg-background [&_textarea]:bg-background [&_details]:bg-background/80">
+                    <div className="[&>form]:mt-0 [&>form]:border-t-0 [&>form]:pt-0 [&_input]:bg-background [&_textarea]:bg-background [&_details]:bg-background">
                       <MemberCardEditor key={user.$id} member={boundCard} />
                     </div>
                   </section>

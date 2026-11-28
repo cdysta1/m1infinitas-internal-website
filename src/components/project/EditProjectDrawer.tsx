@@ -441,7 +441,7 @@ export function EditProjectDrawer({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-4">
                   <Label htmlFor="edit-project-summary">{t('项目介绍')}</Label>
-                  <span className="font-mono text-[10px] text-muted-foreground">
+                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground/80">
                     {summary.length}/{MAX_PROJECT_SUMMARY_LENGTH}
                   </span>
                 </div>
@@ -452,7 +452,7 @@ export function EditProjectDrawer({
                   maxLength={MAX_PROJECT_SUMMARY_LENGTH}
                   rows={6}
                   disabled={saving}
-                  className="min-h-36"
+                  className="min-h-[148px]"
                 />
               </div>
             </div>
